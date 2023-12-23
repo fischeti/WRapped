@@ -1,8 +1,9 @@
 [package]
 name = "wr_apped"
+authors = ["Tim Fischer <fischeti@iis.ee.ethz.ch>"]
+repository = "https://github.com/fischeti/WRapped"
+description = "Wrapped but for Weekly Reports"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
