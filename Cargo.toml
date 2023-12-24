@@ -1,5 +1,5 @@
 [package]
-name = "wr_apped"
+name = "wrapped"
 authors = ["Tim Fischer <fischeti@iis.ee.ethz.ch>"]
 repository = "https://github.com/fischeti/WRapped"
 description = "Wrapped but for Weekly Reports"
