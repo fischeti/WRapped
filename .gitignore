@@ -12,3 +12,6 @@ Cargo.lock
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+
+# The config.toml file is not tracked since it can contain sensitive data such as username, password
+config.toml
