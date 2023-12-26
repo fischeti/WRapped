@@ -5,6 +5,7 @@ use clap::Command;
 pub mod config;
 pub mod mail;
 pub mod wr;
+pub mod stats;
 
 fn cli() -> Command {
     Command::new("WRapped")
@@ -27,6 +28,10 @@ fn cli() -> Command {
         .subcommand(
             Command::new("fetch-replies")
                 .about("Fetch all the replies of the WRs")
+        )
+        .subcommand(
+            Command::new("stats")
+                .about("Generate statistics")
         )
 }
 
@@ -51,6 +56,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some(("fetch-replies", _)) => {
             let mut wrs = mail::fetch_wrs(&config.mail)?;
             mail::fetch_replies(&config.mail, &mut wrs)?;
+        },
+        Some(("stats", _)) => {
+            let mut wrs = mail::fetch_wrs(&config.mail)?;
+            mail::fetch_replies(&config.mail, &mut wrs)?;
+            let stats = stats::Stats::from_wrs(&wrs, config.stats.num_holidays);
+            println!("{:#?}", stats);
         },
         _ => unreachable!(),
     };

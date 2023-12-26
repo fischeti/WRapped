@@ -12,6 +12,7 @@ use crate::wr::{WR, WRs};
 #[derive(Debug)]
 pub struct Address {
     pub name: Option<String>,
+    pub user: Option<String>,
     pub email: Option<String>
 }
 
@@ -19,6 +20,7 @@ impl Address {
     pub fn from_imap_address(addr: &imap_proto::types::Address) -> Self {
         Address {
             name: addr.name.as_ref().map(|s| String::from_utf8_lossy(s).to_string()),
+            user: addr.mailbox.as_ref().map(|s| String::from_utf8_lossy(s).to_string()),
             email: {
                 let host = addr.host.as_ref().map(|s| String::from_utf8_lossy(s).to_string());
                 let mailbox = addr.mailbox.as_ref().map(|s| String::from_utf8_lossy(s).to_string());
