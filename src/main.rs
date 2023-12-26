@@ -22,7 +22,11 @@ fn cli() -> Command {
         )
         .subcommand(
             Command::new("fetch-wrs")
-                .about("Fetch the first mail in the inbox")
+                .about("Fetch all WRs")
+        )
+        .subcommand(
+            Command::new("fetch-replies")
+                .about("Fetch all the replies of the WRs")
         )
 }
 
@@ -40,14 +44,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         Some(("fetch-inbox", _)) => mail::fetch_inbox(&config.mail)
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?,
-        Some(("fetch-wrs", _)) => match mail::fetch_wrs(&config.mail){
-            Ok(wrs) => {
-                println!("You wrote {} WRs this year", wrs.len());
-            },
-            Err(e) => {
-                println!("Error: {:?}", e);
-            },
+        Some(("fetch-wrs", _)) => match mail::fetch_wrs(&config.mail) {
+            Err(e) => Err(Box::new(e) as Box<dyn std::error::Error>)?,
+            Ok(_) => (),
         }
+        Some(("fetch-replies", _)) => {
+            let mut wrs = mail::fetch_wrs(&config.mail)?;
+            mail::fetch_replies(&config.mail, &mut wrs)?;
+        },
         _ => unreachable!(),
     };
 

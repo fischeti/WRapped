@@ -199,7 +199,69 @@ pub fn fetch_wrs(
         }
     }
 
+    println!("Found {} WRs", wrs.len());
 
     imap_session.logout()?;
     Ok(wrs)
+}
+
+pub fn fetch_replies(
+    config: &MailConfig,
+    wrs: &mut WRs,
+) -> imap::error::Result<()> {
+
+    // Login to the IMAP server
+    let mut imap_session = imap_login(&config.login)?;
+
+    let mut num_replies = 0;
+
+    for wr in wrs.wrs.iter_mut() {
+
+        let mut reply_fetch = config.fetch.clone();
+        // Swap `from` and `to` in the fetch configuration
+        std::mem::swap(&mut reply_fetch.from, &mut reply_fetch.to);
+        // Search for the subject of the WRs
+        reply_fetch.pattern = vec![wr.sent.subject.clone()];
+        // Search for messages that contain the pattern
+        let query = build_imap_search_query(&reply_fetch)
+        .map_err(|e: String| imap::error::Error::Bad(e))?;
+
+        for mailbox in config.fetch.re_mailboxes.iter() {
+            // Select the mailbox
+            imap_session.select(mailbox)?;
+
+            // Search for messages that contain the pattern
+            let sequence_set = imap_session.search(query.as_str())?;
+            let mut sequence_set: Vec<_> = sequence_set.into_iter().collect();
+            sequence_set.sort();
+            let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
+
+            // Fetch the messages
+            let messages = imap_session.fetch(sequence_set, "ENVELOPE")?;
+
+            // Print the subjects of the messages
+            for message in messages.iter() {
+                let envelope = message.envelope().unwrap();
+
+                match envelope.in_reply_to {
+                    Some(in_reply_to) => {
+                        let in_reply_to = String::from_utf8_lossy(in_reply_to).to_string();
+                        if let Some(sent_message_id) = wr.sent.message_id.as_ref() {
+                            if in_reply_to.eq(sent_message_id) {
+                                wr.reply = Some(Envelope::from_imap_envelope(envelope));
+                            }
+                        }
+                        num_replies += 1;
+                        break;
+                    },
+                    None => continue,
+                };
+            }
+        }
+    }
+
+    println!("Found {} replies", num_replies);
+
+    imap_session.logout()?;
+    Ok(())
 }

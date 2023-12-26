@@ -31,6 +31,7 @@ pub struct MailLogin {
 
 #[derive(Deserialize)]
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct MailFetch {
     // The mailboxes to fetch from the WRs you sent
     pub wr_mailboxes: Vec<String>,
