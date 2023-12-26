@@ -1,16 +1,24 @@
-[mail]
+[mail.login]
 # The IMAP server to connect to
 server = "my.mail.server"
 # The username to use for authentication
 username = "my_username"
 # The password to use for authentication
 password = "my_password"
+
+[mail.fetch]
 # The mailboxes to fetch from the WRs you sent
 wr_mailboxes = ["Sent", "Sent Messages"]
 # The mailboxes to fetch from the WR replies you received
 re_mailboxes = ["INBOX"]
 # The pattern to match the WR subject you sent
 pattern = ["WR", "Weekly Report"]
+# From which mail address you sent the WRs
+from = "my_username@my.mail.server"
+# To which mail address you sent the WRs
+to = "theboss@my.mail.server"
+# The year to fetch the WRs from
+year = 2023
 
 [stats]
 # The number of holiday weeks you took this year, where you didn't had

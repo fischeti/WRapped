@@ -4,6 +4,7 @@ use clap::Command;
 
 pub mod config;
 pub mod mail;
+pub mod wr;
 
 fn cli() -> Command {
     Command::new("WRapped")
@@ -17,6 +18,10 @@ fn cli() -> Command {
         )
         .subcommand(
             Command::new("fetch-inbox")
+                .about("Fetch the first mail in the inbox")
+        )
+        .subcommand(
+            Command::new("fetch-wrs")
                 .about("Fetch the first mail in the inbox")
         )
 }
@@ -35,6 +40,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         Some(("fetch-inbox", _)) => mail::fetch_inbox(&config.mail)
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?,
+        Some(("fetch-wrs", _)) => match mail::fetch_wrs(&config.mail){
+            Ok(wrs) => {
+                println!("You wrote {} WRs this year", wrs.len());
+            },
+            Err(e) => {
+                println!("Error: {:?}", e);
+            },
+        }
         _ => unreachable!(),
     };
 

@@ -12,18 +12,38 @@ pub struct Config {
 #[derive(Deserialize)]
 #[derive(Debug)]
 pub struct MailConfig {
+    // The login configuration
+    pub login: MailLogin,
+    // The fetch configuration
+    pub fetch: MailFetch,
+}
+
+#[derive(Deserialize)]
+#[derive(Debug)]
+pub struct MailLogin {
     // The IMAP server to connect to
     pub server: String,
     // The username to use for authentication
     pub username: String,
     // The password to use for authentication
     pub password: String,
+}
+
+#[derive(Deserialize)]
+#[derive(Debug)]
+pub struct MailFetch {
     // The mailboxes to fetch from the WRs you sent
     pub wr_mailboxes: Vec<String>,
     // The mailboxes to fetch from the WR replies you received
     pub re_mailboxes: Vec<String>,
     // The pattern to match the WR subject you sent
     pub pattern: Vec<String>,
+    // From which mail address you sent the WRs
+    pub from: String,
+    // To which mail address you sent the WRs
+    pub to: String,
+    // The year to fetch the WRs from
+    pub year: u32,
 }
 
 #[derive(Deserialize)]
