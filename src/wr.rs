@@ -18,6 +18,7 @@ pub fn merge_wrs(
                     if let Some(in_reply_to) = r.in_reply_to.as_ref() {
                         if message_id.eq(in_reply_to) {
                             wr.reply = Some(r.clone());
+                            break;
                         }
                     }
                 }
