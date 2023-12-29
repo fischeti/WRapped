@@ -1,9 +1,14 @@
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
+use std::fs::{self, File};
+use std::io::Write;
+use std::path::Path;
+
+use serde::Serialize;
+use serde_json;
 
 use crate::wr::WRs;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct Stats {
     // The number of WRs
     pub num_wrs: usize,
@@ -44,5 +49,19 @@ impl Stats {
             hour_reply_histogram: wrs.hour_reply_histogram(),
             cc_histogram: wrs.cc_histogram(),
         }
+    }
+
+    pub fn write_to_file(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        // Create the directory path if it doesn't exist
+        let path = Path::new(file_path);
+        if let Some(dir_path) = path.parent() {
+            fs::create_dir_all(dir_path)?;
+        }
+
+        // Serialize and write to the file
+        let serialized = serde_json::to_string_pretty(&self)?;
+        let mut file = File::create(path)?;
+        file.write_all(serialized.as_bytes())?;
+        Ok(())
     }
 }

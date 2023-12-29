@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut wrs = mail::fetch_wrs(&config.mail)?;
             mail::fetch_replies(&config.mail, &mut wrs)?;
             let stats = stats::Stats::from_wrs(&wrs, config.stats.num_holidays);
-            println!("{:#?}", stats);
+            stats.write_to_file("shared/stats.json")?;
         },
         _ => unreachable!(),
     };

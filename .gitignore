@@ -15,3 +15,4 @@ Cargo.lock
 
 # The config.toml file is not tracked since it can contain sensitive data such as username, password
 config.toml
+shared/stats.json
