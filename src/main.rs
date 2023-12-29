@@ -10,8 +10,6 @@ pub mod stats;
 fn cli() -> Command {
     Command::new("WRapped")
         .about("Wrapped but for Weekly Reports")
-        .subcommand_required(true)
-        .arg_required_else_help(true)
         .allow_external_subcommands(true)
         .subcommand(
             Command::new("mailboxes")
@@ -29,10 +27,6 @@ fn cli() -> Command {
             Command::new("fetch-replies")
                 .about("Fetch all the replies of the WRs")
         )
-        .subcommand(
-            Command::new("stats")
-                .about("Generate statistics")
-        )
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -49,21 +43,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         Some(("fetch-inbox", _)) => mail::fetch_inbox(&config.mail)
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?,
-        Some(("fetch-wrs", _)) => match mail::fetch_wrs(&config.mail) {
+        Some(("fetch-wr", _)) => match mail::fetch_wrs(&config.mail) {
             Err(e) => Err(Box::new(e) as Box<dyn std::error::Error>)?,
             Ok(_) => (),
         }
-        Some(("fetch-replies", _)) => {
-            let mut wrs = mail::fetch_wrs(&config.mail)?;
-            mail::fetch_replies(&config.mail, &mut wrs)?;
-        },
-        Some(("stats", _)) => {
-            let mut wrs = mail::fetch_wrs(&config.mail)?;
-            mail::fetch_replies(&config.mail, &mut wrs)?;
-            let stats = stats::Stats::from_wrs(&wrs, config.stats.num_holidays);
+        Some(("fetch-re", _)) => match mail::fetch_replies(&config.mail) {
+            Err(e) => Err(Box::new(e) as Box<dyn std::error::Error>)?,
+            Ok(_) => (),
+        }
+        Some(("merge-wr", _)) => {
+            let wrs = mail::fetch_wrs(&config.mail)?;
+            let replies = mail::fetch_replies(&config.mail)?;
+            wr::merge_wrs(&wrs, &replies);
+        }
+        _ => {
+            let wrs = mail::fetch_wrs(&config.mail)?;
+            let replies = mail::fetch_replies(&config.mail)?;
+            let merged_wrs = wr::merge_wrs(&wrs, &replies);
+            let stats = stats::Stats::from_wrs(&merged_wrs, config.stats.num_holidays);
             stats.write_to_file("shared/stats.json")?;
         },
-        _ => unreachable!(),
     };
 
     Ok(())

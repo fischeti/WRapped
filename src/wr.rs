@@ -3,6 +3,32 @@ use chrono::{Datelike, Timelike};
 
 use crate::mail::Envelope;
 
+
+pub fn merge_wrs(
+    wr: &Vec<Envelope>,
+    wr_re: &Vec<Envelope>,
+) -> WRs {
+
+        let mut wrs = WRs::new();
+
+        for w in wr.iter() {
+            let mut wr = WR::new(w.clone(), None);
+            for r in wr_re.iter() {
+                if let Some(message_id) = wr.sent.message_id.as_ref() {
+                    if let Some(in_reply_to) = r.in_reply_to.as_ref() {
+                        if message_id.eq(in_reply_to) {
+                            wr.reply = Some(r.clone());
+                        }
+                    }
+                }
+            }
+            wrs.wrs.push(wr);
+        }
+
+        println!("Found {} Replies to {} WRs", wrs.num_replied_wrs(), wrs.num_wrs());
+        wrs
+}
+
 #[derive(Debug)]
 pub struct WR {
     // The Envelope of the WR that was sent

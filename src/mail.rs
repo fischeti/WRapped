@@ -7,9 +7,8 @@ use native_tls::TlsConnector;
 use chrono::{DateTime, FixedOffset};
 
 use crate::config::{MailConfig, MailLogin, MailFetch};
-use crate::wr::{WR, WRs};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Address {
     pub name: Option<String>,
     pub user: Option<String>,
@@ -33,7 +32,7 @@ impl Address {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Envelope {
     pub date: DateTime<FixedOffset>,
     pub subject: String,
@@ -158,7 +157,7 @@ fn build_imap_search_query(
 
 pub fn fetch_wrs(
     config: &MailConfig,
-) -> imap::error::Result<WRs> {
+) -> imap::error::Result<Vec<Envelope>> {
 
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
@@ -169,7 +168,7 @@ pub fn fetch_wrs(
 
 
     // List of WRs
-    let mut wrs = WRs::new();
+    let mut wrs = Vec::new();
 
     for mailbox in config.fetch.wr_mailboxes.iter() {
         // Select the mailbox
@@ -190,11 +189,8 @@ pub fn fetch_wrs(
 
             match envelope.in_reply_to {
                 None => {
-                    let wr = WR {
-                        sent: Envelope::from_imap_envelope(envelope),
-                        reply: None,
-                    };
-                    wrs.push(wr);
+                    let env = Envelope::from_imap_envelope(envelope);
+                    wrs.push(env);
                 },
                 Some(_) => continue,
             };
@@ -209,61 +205,52 @@ pub fn fetch_wrs(
 
 pub fn fetch_replies(
     config: &MailConfig,
-    wrs: &mut WRs,
-) -> imap::error::Result<()> {
+) -> imap::error::Result<Vec<Envelope>> {
 
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
 
-    let mut num_replies = 0;
 
-    for wr in wrs.wrs.iter_mut() {
+    let mut reply_fetch = config.fetch.clone();
+    // Swap `from` and `to` in the fetch configuration
+    std::mem::swap(&mut reply_fetch.from, &mut reply_fetch.to);
 
-        let mut reply_fetch = config.fetch.clone();
-        // Swap `from` and `to` in the fetch configuration
-        std::mem::swap(&mut reply_fetch.from, &mut reply_fetch.to);
-        // Search for the subject of the WRs
-        reply_fetch.pattern = vec![wr.sent.subject.clone()];
+    // Search for messages that contain the pattern
+    let query = build_imap_search_query(&reply_fetch)
+        .map_err(|e| imap::error::Error::Bad(e))?;
+
+    // List of WRs
+    let mut wr_replies = Vec::new();
+
+    for mailbox in config.fetch.re_mailboxes.iter() {
+        // Select the mailbox
+        imap_session.select(mailbox)?;
+
         // Search for messages that contain the pattern
-        let query = build_imap_search_query(&reply_fetch)
-        .map_err(|e: String| imap::error::Error::Bad(e))?;
+        let sequence_set = imap_session.search(query.as_str())?;
+        let mut sequence_set: Vec<_> = sequence_set.into_iter().collect();
+        sequence_set.sort();
+        let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
 
-        for mailbox in config.fetch.re_mailboxes.iter() {
-            // Select the mailbox
-            imap_session.select(mailbox)?;
+        // Fetch the messages
+        let messages = imap_session.fetch(sequence_set, "ENVELOPE")?;
 
-            // Search for messages that contain the pattern
-            let sequence_set = imap_session.search(query.as_str())?;
-            let mut sequence_set: Vec<_> = sequence_set.into_iter().collect();
-            sequence_set.sort();
-            let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
+        // Print the subjects of the messages
+        for message in messages.iter() {
+            let envelope = message.envelope().unwrap();
 
-            // Fetch the messages
-            let messages = imap_session.fetch(sequence_set, "ENVELOPE")?;
-
-            // Print the subjects of the messages
-            for message in messages.iter() {
-                let envelope = message.envelope().unwrap();
-
-                match envelope.in_reply_to {
-                    Some(in_reply_to) => {
-                        let in_reply_to = String::from_utf8_lossy(in_reply_to).to_string();
-                        if let Some(sent_message_id) = wr.sent.message_id.as_ref() {
-                            if in_reply_to.eq(sent_message_id) {
-                                wr.reply = Some(Envelope::from_imap_envelope(envelope));
-                            }
-                        }
-                        num_replies += 1;
-                        break;
+            match envelope.in_reply_to {
+                Some(_) => {
+                    let env = Envelope::from_imap_envelope(envelope);
+                    wr_replies.push(env);
                     },
-                    None => continue,
-                };
-            }
+                None => continue,
+            };
         }
     }
 
-    println!("Found {} replies", num_replies);
+    println!("Found {} potential Replies", wr_replies.len());
 
     imap_session.logout()?;
-    Ok(())
+    Ok(wr_replies)
 }
