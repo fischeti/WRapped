@@ -88,22 +88,62 @@ function drawProgessCircle(container, ratio) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  const container = document.getElementById('progress-circle');
+  const progressCircleContainer = document.getElementById('progress-circle');
+  const ratioTextOverlayContainer = document.getElementById('ratio-text-overlay');
+  const numWrsWrittenContainer = document.getElementById('num-wrs-written');
+  const numWrsSkippedContainer = document.getElementById('num-wrs-skipped');
+  const delayOfReplyContainer = document.getElementById('delay-of-reply');
   let ratioRepliedWRs; // Variable to store the data
 
   function resizeChart() {
     if (ratioRepliedWRs !== undefined) {
-      drawProgessCircle(container, ratioRepliedWRs);
+      drawProgessCircle(progressCircleContainer, ratioRepliedWRs);
     }
   }
 
-  d3.json('../../shared/stats.json').then(function(data) {
-    ratioRepliedWRs = data.ratio_replied_wrs;
-    drawProgessCircle(container, ratioRepliedWRs);
+  function updateTextOverlay(ratio) {
+    const ratioText = (ratio * 100).toFixed() + '%';
+    ratioTextOverlayContainer.textContent = ratioText;
+  }
 
-    // Set up the resize event listener now that we have data
-    window.addEventListener('resize', resizeChart);
-  }).catch(function(error) {
-    console.error('Error loading the JSON file:', error);
-  });
+  function updateNumWrsWritten(numWrs) {
+    const numWrsText = numWrs + " WRs"
+    numWrsWrittenContainer.textContent = numWrsText;
+  }
+
+  function updateNumWrsSkipped(numWrs) {
+    const numWrsText = numWrs + " WRs"
+    numWrsSkippedContainer.textContent = numWrsText;
+  }
+
+  function updateDelay(delayDays) {
+    const delayDaysText = delayDays.toFixed(1) + " days"
+    delayOfReplyContainer.textContent = delayDaysText;
+  }
+
+  fetch('../../shared/stats.json')
+    .then(response => response.json())
+    .then(data => {
+        // Now we have the JSON data
+        ratioRepliedWRs = data.ratio_replied_wrs;
+        numWrsWritten = data.num_wrs;
+        numWrsSkipped = data.num_skipped_wrs;
+        delayDays = data.avg_reply_delay;
+        // print the data to the console
+        updateNumWrsWritten(numWrsWritten);
+        updateNumWrsSkipped(numWrsSkipped);
+        updateTextOverlay(ratioRepliedWRs);
+        updateDelay(delayDays);
+        drawProgessCircle(progressCircleContainer, ratioRepliedWRs);
+
+        // Set up the resize event listener now that we have data
+        window.addEventListener('resize', resizeChart);
+    })
+    .catch(error => {
+        console.error('Error fetching data:', error);
+        ratioTextOverlayContainer.textContent = 'Failed to load data.';
+        numWrsWrittenContainer.textContent = 'Failed to load data.';
+        numWrsSkippedContainer.textContent = 'Failed to load data.';
+        delayOfReplyContainer.textContent = 'Failed to load data.';
+    });
 });
