@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/styles.css">
+<title>Yearly WR Stats</title>
+<!-- Include D3.js from CDN -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script defer src="js/main.js"></script>
+</head>
+
+<body>
+  <div class="tile metric small-wide num-wrs-tile">
+    <div class="highlighted-numbers">30 WRs</div>
+    <div class="tile-text">written...</div>
+  </div>
+  <div class="tile metric small-wide num_skipped_wrs">
+    <div class="highlighted-numbers">2 WRs</div>
+    <div class="tile-text">...skipped</div>
+  </div>
+  <div class="tile metric quadratic reply-ratio">
+    <div id="reply-ratio-container">
+      <div id="progress-circle"></div>
+      <div id="ratio-text-overlay" class="highlighted-numbers">65%</div>
+    </div>
+    <div id="reply-ratio-text">
+      <div class="tile-text">of WRs got a reply</div>
+    </div>
+  </div>
+  <div class="tile metric small-wide avg-delay">
+    <div class="tile-text">On average</div>
+    <div class="highlighted-numbers">2.7 days</div>
+    <div class="tile-text">after you got a reply</div>
+  </div>
+  <div class="tile small-wide wrapped-tile">
+    <span><span class="wrapped-highlight">WR</span><span class="wrapped-normal">apped</span></span>
+
+    <div class="wrapped-year">2023</div>
+  </div>
+  <div class="tile metric full-height top-people">
+    Top people
+  </div>
+  <div class="tile metric chart-width weekday-chart">
+    Weekday Chart
+  </div>
+  <div class="tile metric chart-width time-graph">
+    Time Graph
+  </div>
+  <!-- D3.js from CDN -->
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <!-- Linking to external JavaScript -->
+
+</body>
+</html>
