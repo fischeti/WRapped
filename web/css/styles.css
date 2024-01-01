@@ -150,6 +150,26 @@ body {
   justify-content: center;
 }
 
+.weekday-chart {
+  order: 6;
+}
+
+#weekday-chart-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.time-graph {
+  order: 7;
+}
+
+#timeofday-chart-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .small-wide {
   grid-column: span 2;
   grid-row: span 1;
@@ -169,10 +189,4 @@ body {
 
 .top-people {
   order: 4;
-}
-.weekday-chart {
-  order: 6;
-}
-.time-graph {
-  order: 7;
 }
