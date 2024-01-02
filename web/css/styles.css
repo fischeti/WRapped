@@ -17,6 +17,7 @@ body {
   height: 100vh;
   margin: 0;
   padding: 40px;
+  overflow: hidden; /* This disables scrolling */
   box-sizing: border-box;
   background-image: radial-gradient(ellipse at 62% 37%, var(--color-palette-3) 0%, var(--color-palette-2) 20%, var(--color-palette-1) 90%);
 }
