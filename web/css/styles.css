@@ -150,6 +150,15 @@ body {
   justify-content: center;
 }
 
+.chart-text {
+  position: relative;
+  height: 15%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 #weekday-tile {
   order: 6;
 }
@@ -157,7 +166,7 @@ body {
 #weekday-chart-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 85%;
 }
 
 #timeofday-tile {
@@ -167,7 +176,7 @@ body {
 #timeofday-chart-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 85%;
 }
 
 .small-wide {
