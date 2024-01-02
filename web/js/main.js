@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
     delayOfReplyContainer.textContent = delayDaysText;
   }
 
-  fetch('../../shared/stats.json')
+  fetch('../shared/stats.json')
     .then(response => response.json())
     .then(data => {
         // Now we have the JSON data
