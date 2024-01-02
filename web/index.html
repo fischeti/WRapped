@@ -11,15 +11,15 @@
 </head>
 
 <body>
-  <div class="tile metric small-wide num-wrs-tile">
+  <div id="num-wrs-tile" class="tile metric small-wide">
     <div id="num-wrs-written" class="highlighted-numbers"></div>
     <div class="tile-text">written...</div>
   </div>
-  <div class="tile metric small-wide num_skipped_wrs">
+  <div id= "num-skipped-wrs-tile" class="tile metric small-wide">
     <div id="num-wrs-skipped" class="highlighted-numbers"></div>
     <div class="tile-text">...skipped</div>
   </div>
-  <div class="tile metric quadratic reply-ratio">
+  <div id="reply-ratio-tile" class="tile metric quadratic">
     <div id="reply-ratio-container">
       <div id="progress-circle"></div>
       <div id="ratio-text-overlay" class="highlighted-numbers"></div>
@@ -28,22 +28,22 @@
       <div class="tile-text">of WRs got a reply</div>
     </div>
   </div>
-  <div class="tile metric small-wide avg-delay">
+  <div id="avg-delay-tile" class="tile metric small-wide">
     <div class="tile-text">On average</div>
     <div id="delay-of-reply" class="highlighted-numbers"></div>
     <div class="tile-text">after you got a reply</div>
   </div>
-  <div class="tile small-wide wrapped-tile">
+  <div id="wrapped-tile" class="tile small-wide">
     <span><span class="wrapped-highlight">WR</span><span class="wrapped-normal">apped</span></span>
     <div class="wrapped-year">2023</div>
   </div>
-  <div class="tile metric full-height top-people">
+  <div id="cc-leaderboard-tile" class="tile metric full-height">
     Top people
   </div>
-  <div class="tile metric chart-width weekday-chart">
+  <div id="weekday-tile" class="tile metric chart-width">
     <div id="weekday-chart-container"></div>
   </div>
-  <div class="tile metric chart-width time-graph">
+  <div id="timeofday-tile" class="tile metric chart-width">
     <div id="timeofday-chart-container"></div>
   </div>
 </body>

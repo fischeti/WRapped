@@ -39,7 +39,7 @@ body {
   background: rgba(0, 0, 0, 0.4);
 }
 
-.wrapped-tile {
+#wrapped-tile {
   background: rgba(0, 0, 0, 0.7);
   order: 5;
   display: flex;
@@ -67,7 +67,7 @@ body {
   font-weight: bold;
 }
 
-.wrapped-tile .wrapped-highlight {
+#wrapped-tile .wrapped-highlight {
   font-size: 5vw;
   font-weight: bold;
   background: -webkit-linear-gradient(left, #872341, #F05941);
@@ -79,19 +79,19 @@ body {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.wrapped-tile .wrapped-normal {
+#wrapped-tile .wrapped-normal {
   font-size: 3.5vw;
   color: rgb(180, 180, 180);
   font-weight: bold;
 }
 
-.wrapped-tile .wrapped-year {
+#wrapped-tile .wrapped-year {
   font-size: 2vw;
   color: rgb(120, 120, 120);
   font-weight: bold;
 }
 
-.num-wrs-tile {
+#num-wrs-tile {
   order: 1;
   display: flex;
   flex-direction: column;
@@ -99,7 +99,7 @@ body {
   justify-content: center;
 }
 
-.num_skipped_wrs {
+#num-skipped-wrs-tile {
   order: 5;
   display: flex;
   flex-direction: column;
@@ -107,7 +107,7 @@ body {
   justify-content: center;
 }
 
-.avg-delay {
+#avg-delay-tile {
   order: 3;
   display: flex;
   flex-direction: column;
@@ -115,7 +115,7 @@ body {
   justify-content: center;
 }
 
-.reply-ratio {
+#reply-ratio-tile {
   order: 2;
 }
 
@@ -150,7 +150,7 @@ body {
   justify-content: center;
 }
 
-.weekday-chart {
+#weekday-tile {
   order: 6;
 }
 
@@ -160,7 +160,7 @@ body {
   height: 100%;
 }
 
-.time-graph {
+#timeofday-tile {
   order: 7;
 }
 
@@ -187,6 +187,6 @@ body {
   grid-row: span 2;
 }
 
-.top-people {
+#cc-leaderboard-tile {
   order: 4;
 }
