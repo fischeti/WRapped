@@ -70,7 +70,7 @@ body {
 #wrapped-tile .wrapped-highlight {
   font-size: 5vw;
   font-weight: bold;
-  background: -webkit-linear-gradient(left, #872341, #F05941);
+  background: -webkit-linear-gradient(left, var(--color-palette-2), var(--color-palette-4));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -198,4 +198,74 @@ body {
 
 #cc-leaderboard-tile {
   order: 4;
+}
+
+#cc-list {
+  padding: 0;
+  height: 90%;
+  list-style: none;
+}
+
+#cc-title {
+  padding: 0;
+  height: 10%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes flipIn {
+  0% {
+      transform: perspective(200px) rotateX(90deg);
+      opacity: 0;
+  }
+  100% {
+      transform: perspective(200px) rotateX(0deg);
+      opacity: 1;
+  }
+}
+
+#cc-list li {
+  animation: flipIn 0.5s ease forwards;
+  opacity: 0;
+  transform-origin: top;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  height: 10%;
+}
+
+.cc-list-place {
+  width: 20%;
+  height: 100%;
+  display: inline-block;
+  color: var(--text-grey);
+  font-weight: bold;
+  font-size: 1.6vw;
+  text-align: center;
+}
+
+.cc-list-username {
+  width: 50%;
+  height: 100%;
+  display: inline-block;
+  background: -webkit-linear-gradient(90deg, var(--color-palette-2), var(--color-palette-4));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  font-size: 1.8vw;
+  font-weight: bold;
+  text-align: left;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.cc-list-count {
+  width: 30%;
+  height: 100%;
+  display: inline-block;
+  font-size: 1.4vw;
+  color: var(--text-grey);
+  font-weight: bold;
+
 }

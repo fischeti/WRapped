@@ -335,6 +335,47 @@ function drawTimeOfDayChart(container_id, timeOfDayData) {
       .attr("width", width + margin.left + margin.right);
 }
 
+function winnerEmojis(i) {
+  if (i == 1) return "🏆";
+  if (i == 2) return "🥈";
+  if (i == 3) return "🥉";
+  return ".";
+}
+
+function updateCCList(ccData) {
+  // Transform the data into an array and sort it
+  const sortedData = Object.entries(ccData)
+    .map(([username, count]) => ({ username, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10); // Only show the top 10
+
+
+  // Create list elements
+  const listContainer = document.getElementById('cc-list');
+  sortedData.forEach((item, index) => {
+    const listItem = document.createElement('li');
+    listItem.style.animationDelay = `${index * 0.15}s`;
+
+    const placeSpan = document.createElement('div');
+    placeSpan.className = 'cc-list-place';
+    placeSpan.textContent = `${winnerEmojis(index + 1)}`;
+
+    const usernameSpan = document.createElement('div');
+    usernameSpan.className = 'cc-list-username';
+    usernameSpan.textContent = `@${item.username}`;
+
+    const countSpan = document.createElement('div');
+    countSpan.className = 'cc-list-count';
+    countSpan.textContent = `${item.count}x`;
+
+    listItem.appendChild(placeSpan);
+    listItem.appendChild(usernameSpan);
+    listItem.appendChild(countSpan);
+
+    listContainer.appendChild(listItem);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const numWrsWrittenId = 'num-wrs-written';
   const numWrsSkippedId = 'num-wrs-skipped';
@@ -348,6 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let timeofdayData;
   let numWrsWritten;
   let numWrsSkipped;
+  let ccData;
 
   const numWrsWrittenContainer= document.getElementById(numWrsWrittenId);
   function updateNumWrsWritten(numWrs) {
@@ -400,11 +442,12 @@ document.addEventListener('DOMContentLoaded', function() {
         delayDays = data.avg_reply_delay;
         weekdayData = data.weekday_wr_histogram;
         timeofdayData = data.hour_reply_histogram;
-        // print the data to the console
+        ccData = data.cc_histogram;
         updateNumWrsWritten(numWrsWritten);
         updateNumWrsSkipped(numWrsSkipped);
         updateTextOverlay(ratioRepliedWRs);
         updateDelay(delayDays);
+        updateCCList(ccData);
         resizeProgressCircleChart(progressCircleId, ratioRepliedWRs);
         resizeWeekdayChart(weekdayId, weekdayData);
         resizeTimeOfDayChart(timeofdayId, timeofdayData);
