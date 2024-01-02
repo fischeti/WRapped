@@ -56,34 +56,10 @@ function drawProgessCircle(container_id, ratio) {
     .attr("offset", "100%")
     .attr("stop-color", "var(--color-palette-4)");
 
-
-  // Create a drop shadow filter
-  const dropShadowFilter = defs.append("filter")
-    .attr("id", "drop-shadow")
-    .attr("height", "130%"); // To accommodate the shadow
-
-  dropShadowFilter.append("feGaussianBlur")
-    .attr("in", "SourceAlpha")
-    .attr("stdDeviation", 0.5) // Adjust for blur size
-    .attr("result", "blur");
-
-  dropShadowFilter.append("feOffset")
-    .attr("in", "blur")
-    .attr("dx", 1) // Horizontal offset
-    .attr("dy", 1) // Vertical offset
-    .attr("result", "offsetBlur");
-
-  const feMerge = dropShadowFilter.append("feMerge");
-    feMerge.append("feMergeNode")
-    .attr("in", "offsetBlur");
-    feMerge.append("feMergeNode")
-    .attr("in", "SourceGraphic");
-
   // Apply the gradient to the arc
   const path = svg.append("path")
     .attr("d", arc)
-    .attr("fill", "url(#svgGradient)")
-    .style("filter", "url(#drop-shadow)");
+    .attr("fill", "url(#svgGradient)");
 
   path.transition()
     .duration(1500)
@@ -193,42 +169,6 @@ function drawBarChart(container_id, weekdayData) {
     .attr("offset", "100%")
     .attr("stop-color", "var(--color-palette-4)");
 
-  const dropShadowFilter = defs.append("filter")
-    .attr("id", "drop-shadow")
-    .attr("height", "130%");
-
-  dropShadowFilter.append("feGaussianBlur")
-    .attr("in", "SourceAlpha")
-    .attr("stdDeviation", 2) // Adjust for blur size
-    .attr("result", "blur");
-
-  dropShadowFilter.append("feOffset")
-    .attr("in", "blur")
-    .attr("dx", 2) // Horizontal offset
-    .attr("dy", 2) // Vertical offset
-    .attr("result", "offsetBlur");
-
-  // Add feFlood for shadow color and opacity
-  dropShadowFilter.append("feFlood")
-    .attr("flood-color", "black") // Shadow color
-    .attr("flood-opacity", 1.0) // Shadow opacity; adjust as needed
-    .attr("result", "color");
-
-  // Add feComposite to composite the color with the offset blur
-  dropShadowFilter.append("feComposite")
-    .attr("in", "color")
-    .attr("in2", "offsetBlur")
-    .attr("operator", "in")
-    .attr("result", "shadow");
-
-  // Update feMerge to include the composite shadow
-  const feMerge = dropShadowFilter.append("feMerge");
-  feMerge.append("feMergeNode")
-    .attr("in", "shadow");
-  feMerge.append("feMergeNode")
-    .attr("in", "SourceGraphic");
-
-
   const barWidthOffset = 30;
 
   // Create the bars
@@ -241,7 +181,7 @@ function drawBarChart(container_id, weekdayData) {
       .attr("width", x.bandwidth()-barWidthOffset)
       .attr("height", 0)
       .attr("fill", "url(#bar-gradient)")
-      .style("filter", "url(#drop-shadow)")
+      .style("filter", "url(#glow)")
       .attr("rx", barWidthOffset/2)
       .attr("ry", barWidthOffset/2)
     .transition()
