@@ -31,7 +31,13 @@ fn cli() -> Command {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    let config_contents = fs::read_to_string("config.toml")?;
+    let config_contents = match fs::read_to_string("config.toml") {
+        Ok(contents) => contents,
+        Err(e) => {
+            eprintln!("Error reading config file `config.toml`: {}", e);
+            std::process::exit(1);
+        }
+    };
     let config: config::Config = toml::from_str(&config_contents)?;
 
     let matches = cli().get_matches();
