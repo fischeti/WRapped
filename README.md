@@ -6,7 +6,7 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
 
 ## Getting Started
 
-1. Install the newest version of [Rust](https://sh.rustup.rs), or update your current version:
+1. Install the newest version of [Rust](https://rustup.rs), or update your current version:
     ```bash
     rustup update
     ```
