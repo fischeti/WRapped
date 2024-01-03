@@ -1,6 +1,8 @@
 [mail.login]
 # The IMAP server to connect to
 server = "my.mail.server"
+# The port to connect to
+port = 993
 # The username to use for authentication
 username = "my_username"
 # The password to use for authentication

@@ -61,12 +61,13 @@ fn imap_login(
 ) -> imap::error::Result<imap::Session<native_tls::TlsStream<std::net::TcpStream>>> {
 
     let domain = login.server.as_str();
+    let port = login.port;
     let username = login.username.as_str();
     let password = login.password.as_str();
 
     // Connect to the IMAP server
     let tls = TlsConnector::builder().build().unwrap();
-    let client = imap::connect((domain, 993), domain, &tls).unwrap();
+    let client = imap::connect((domain, port), domain, &tls).unwrap();
 
     // Login to the IMAP server
     let imap_session = client

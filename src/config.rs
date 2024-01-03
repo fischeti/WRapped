@@ -23,6 +23,8 @@ pub struct MailConfig {
 pub struct MailLogin {
     // The IMAP server to connect to
     pub server: String,
+    // The port to connect to
+    pub port: u16,
     // The username to use for authentication
     pub username: String,
     // The password to use for authentication
