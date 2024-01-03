@@ -1,5 +1,11 @@
 # WRapped
 
+<div align="center">
+
+  <img src="img/screenshot.png" alt="Logo" width="600">
+
+</div>
+
 ## Description
 
 This project is inspired by the yearly 'Spotify Wrapped', which is a summary of your listening habits over the past year. Wrapped does the same thing, but for Weekly reports a.k.a. WRs written by E-Mails. It is a simple script that parses your E-Mail inbox and outbox and generates statistics about your weekly reports. The statistic extraction is written in Rust, which creates a JSON file that is visualized using a web app.
