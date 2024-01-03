@@ -85,7 +85,7 @@ function drawBarChart(container_id, weekdayData) {
 
   // Transform the data into an array format and sort by weekday
   const data = Object.keys(weekdayData).map(day => {
-    return { day: parseInt(day), count: weekdayData[day] };
+    return { day: (parseInt(day) + 3) % 7, count: weekdayData[day] };
   }).sort((a, b) => a.day - b.day);
 
   // Create SVG element
