@@ -21,12 +21,11 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
     ```
     More information about the configuration can be found in the [Configuration](#configuration) section.
 
-4. Run the app:
+4. Run the app to generate the statistics:
     ```bash
     cargo run
     ```
-
-5. Create a localhost server to view the app:
+5. Create a localhost server in the `web` folder to view the app. For instance:
     ```bash
     cd web
     python3 -m http.server
