@@ -18,7 +18,7 @@ function drawProgessCircle(container_id, ratio) {
 
   // The radius of the pie chart is half the smallest side
   const radius = Math.min(width, height) / 2 - margin;
-  innerRadius = radius - 25;
+  innerRadius = radius - width / 10;
 
   // Append the svg object to the div called 'progress-circle'
   const svg = d3.select("#" + container_id)
@@ -100,7 +100,7 @@ function drawBarChart(container_id, weekdayData) {
   const x = d3.scaleBand()
     .range([0, width])
     .domain(data.map(d => d.day))
-    .padding(0.1);
+    .padding(0.5);
 
   const y = d3.scaleLinear()
     .range([height, 0])
@@ -169,21 +169,19 @@ function drawBarChart(container_id, weekdayData) {
     .attr("offset", "100%")
     .attr("stop-color", "var(--color-palette-4)");
 
-  const barWidthOffset = 30;
-
   // Create the bars
   svg.selectAll(".bar")
   .data(data) // Adjust to match the number of ticks on your Y-axis
     .join("rect")
       .attr("class", "bar")
-      .attr("x", d => x(d.day)+barWidthOffset/2)
+      .attr("x", d => x(d.day))
       .attr("y", d => height)
-      .attr("width", x.bandwidth()-barWidthOffset)
+      .attr("width", x.bandwidth())
       .attr("height", 0)
       .attr("fill", "url(#bar-gradient)")
       .style("filter", "url(#glow)")
-      .attr("rx", barWidthOffset/2)
-      .attr("ry", barWidthOffset/2)
+      .attr("rx", x.bandwidth()/2)
+      .attr("ry", x.bandwidth()/2)
     .transition()
       .duration(1500)
       .attr("y", d => y(d.count))
@@ -288,12 +286,12 @@ function drawTimeOfDayChart(container_id, timeOfDayData) {
       .attr("x2", "0%").attr("y2", "100%");
 
     areaGradient.append("stop")
-    .attr("offset", "25%")
-    .attr("stop-color", "var(--color-palette-4)");
+      .attr("offset", "50%")
+      .attr("stop-color", "var(--color-palette-3)");
 
-    areaGradient.append("stop")
+      areaGradient.append("stop")
       .attr("offset", "100%")
-      .attr("stop-color", "rgba(0, 0, 0, 0)");
+      .attr("stop-color", "var(--color-palette-4)");
 
     // Define a clip path
     const clip = defs.append("clipPath")
@@ -312,6 +310,7 @@ function drawTimeOfDayChart(container_id, timeOfDayData) {
       .datum(data)
       .attr("class", "area")
       .attr("d", area)
+      // .attr("height", height + margin.top + margin.bottom)
       .attr("clip-path", "url(#clip)")
       .attr("fill", "url(#area-gradient)");
 
@@ -325,7 +324,7 @@ function drawTimeOfDayChart(container_id, timeOfDayData) {
       .attr("fill", "none")
       .attr("clip-path", "url(#clip)")
       .attr("stroke","var(--text-grey)")
-      .attr("stroke-width", 1.5)
+      .attr("stroke-width", 2.5)
       .attr("d", line);
 
     // Animate the clip path
