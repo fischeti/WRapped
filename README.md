@@ -27,9 +27,8 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
     ```bash
     cargo run
     ```
-5. Create a localhost server in the `web` folder to view the app. For instance:
+5. Create a localhost server to view the app. For instance:
     ```bash
-    cd web
     python3 -m http.server
     ```
 
