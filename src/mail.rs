@@ -181,7 +181,6 @@ pub fn fetch_wrs(
         let mut sequence_set: Vec<_> = sequence_set.into_iter().collect();
         sequence_set.sort();
         let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
-        
         // Fetch the messages
         let messages = imap_session.fetch(sequence_set, "ENVELOPE")?;
 
