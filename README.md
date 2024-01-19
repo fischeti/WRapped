@@ -21,15 +21,7 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
     git clone https://github.com/fischeti/WRapped.git
     cd WRapped
     ```
-3. Copy the example configuration file and modify it as needed:
-    ```bash
-    cp config.example.toml config.toml
-    ```
-    More information about the configuration can be found in the [Configuration](#configuration) section.
-
-    | Important Note! |
-    |:----------------|
-    | Make sure that you don't commit or publish your configuration file, as it contains sensitive information such as your password! The `config.toml` is not tracked for that reason |
+3. Modify the mail configuration `config.toml` as explained in the [Configuration](#configuration) section:
 
 4. Run the app to generate the statistics:
     ```bash
@@ -51,10 +43,10 @@ The configuration file is written in [TOML](https://toml.io). To login to your E
 server = "my.mail.server"
 # The port to connect to
 port = 993
-# The username to use for authentication
-username = "my_username"
-# The password to use for authentication
-password = "my_password"
+# (Optional) The username to use for authentication
+# username = "my_username"
+# (Optional) The password to use for authentication
+# password = "my_password"
 ```
 The configure which E-Mails to search for and fetch, you need to provide the following information:
 
