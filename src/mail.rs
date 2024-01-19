@@ -5,6 +5,7 @@ extern crate chrono;
 use itertools::join;
 use native_tls::TlsConnector;
 use chrono::{DateTime, FixedOffset};
+use std::str::from_utf8;
 
 use crate::config::{MailConfig, MailLogin, MailFetch};
 
@@ -180,20 +181,28 @@ pub fn fetch_wrs(
         let mut sequence_set: Vec<_> = sequence_set.into_iter().collect();
         sequence_set.sort();
         let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
-
+        
         // Fetch the messages
         let messages = imap_session.fetch(sequence_set, "ENVELOPE")?;
 
         // Print the subjects of the messages
         for message in messages.iter() {
             let envelope = message.envelope().unwrap();
+            let reply_pattern= vec!["Re:", "RE:", "Aw:", "AW:"];
 
             match envelope.in_reply_to {
                 None => {
                     let env = Envelope::from_imap_envelope(envelope);
                     wrs.push(env);
                 },
-                Some(_) => continue,
+                Some(_) => {
+                    let subject = from_utf8(envelope.subject.unwrap()).expect("No subject in the envelope");
+                    if reply_pattern.iter().any(|&s| subject.contains(s)) {
+                        continue;
+                    }
+                    let env = Envelope::from_imap_envelope(envelope);
+                    wrs.push(env);
+                },
             };
         }
     }
