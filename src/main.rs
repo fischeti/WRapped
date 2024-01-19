@@ -1,6 +1,7 @@
 use std::fs;
 
 use clap::Command;
+use rpassword;
 
 pub mod config;
 pub mod mail;
@@ -38,7 +39,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             std::process::exit(1);
         }
     };
-    let config: config::Config = toml::from_str(&config_contents)?;
+    let mut config: config::Config = toml::from_str(&config_contents)?;
+
+    let username = match config.mail.login.username {
+        Some(username) => Some(username),
+        None => {
+            eprint!("Username: ");
+            let mut username = String::new();
+            std::io::stdin().read_line(&mut username)?;
+            Some(username.trim().to_string())
+        }
+    };
+
+    let password = match config.mail.login.password {
+        Some(password) => Some(password),
+        None => Some(rpassword::prompt_password("Password: ").unwrap())
+    };
+
+    config.mail.login.username = username;
+    config.mail.login.password = password;
 
     let matches = cli().get_matches();
 

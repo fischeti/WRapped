@@ -26,9 +26,9 @@ pub struct MailLogin {
     // The port to connect to
     pub port: u16,
     // The username to use for authentication
-    pub username: String,
+    pub username: Option<String>,
     // The password to use for authentication
-    pub password: String,
+    pub password: Option<String>,
 }
 
 #[derive(Deserialize)]

@@ -63,8 +63,8 @@ fn imap_login(
 
     let domain = login.server.as_str();
     let port = login.port;
-    let username = login.username.as_str();
-    let password = login.password.as_str();
+    let username = login.username.clone().unwrap();
+    let password = login.password.clone().unwrap();
 
     // Connect to the IMAP server
     let tls = TlsConnector::builder().build().unwrap();

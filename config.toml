@@ -3,10 +3,10 @@
 server = "my.mail.server"
 # The port to connect to
 port = 993
-# The username to use for authentication
-username = "my_username"
-# The password to use for authentication
-password = "my_password"
+# (Optional) The username to use for authentication
+# username = "my_username"
+# (Optional) The password to use for authentication
+# password = "my_password"
 
 [mail.fetch]
 # The mailboxes to fetch from the WRs you sent, you can also run `cargo run mailboxes` to get a list of all mailboxes you have.
