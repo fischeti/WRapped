@@ -6,6 +6,7 @@ use itertools::join;
 use native_tls::TlsConnector;
 use chrono::{DateTime, FixedOffset};
 use std::str::from_utf8;
+use log::{info, warn};
 
 use crate::config::{MailConfig, MailLogin, MailFetch};
 
@@ -87,9 +88,9 @@ pub fn list_mailboxes(
 
     // List all mailboxes
     let mailboxes = imap_session.list(Some(""), Some("*"))?;
-    println!("Mailboxes:");
+    info!("Mailboxes:");
     for mailbox in mailboxes.iter() {
-        println!("{}", mailbox.name());
+        info!("{}", mailbox.name());
     }
 
     // Logout from the IMAP server
@@ -119,7 +120,7 @@ pub fn fetch_inbox(
     let envelope = message.envelope().unwrap();
     let subject = envelope.subject.unwrap();
     let subject_str = std::str::from_utf8(subject).unwrap();
-    println!("Got Mail with Subject: {}", subject_str);
+    info!("Got Mail with Subject: {}", subject_str);
 
     // Logout from the IMAP server
     imap_session.logout()?;
@@ -174,7 +175,13 @@ pub fn fetch_wrs(
 
     for mailbox in config.fetch.wr_mailboxes.iter() {
         // Select the mailbox
-        imap_session.select(mailbox)?;
+        match imap_session.select(mailbox) {
+            Ok(_) => {},
+            Err(e) => {
+                warn!("Could not select mailbox {}: {}", mailbox, e);
+                continue;
+            },
+        }
 
         // Search for messages that contain the pattern
         let sequence_set = imap_session.search(query.as_str())?;
@@ -206,7 +213,7 @@ pub fn fetch_wrs(
         }
     }
 
-    println!("Found {} WRs", wrs.len());
+    info!("Found {} WRs", wrs.len());
 
     imap_session.logout()?;
     Ok(wrs)
@@ -258,7 +265,7 @@ pub fn fetch_replies(
         }
     }
 
-    println!("Found {} potential Replies", wr_replies.len());
+    info!("Found {} potential Replies", wr_replies.len());
 
     imap_session.logout()?;
     Ok(wr_replies)

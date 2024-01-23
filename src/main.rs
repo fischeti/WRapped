@@ -1,7 +1,9 @@
 use std::fs;
+use std::env;
 
 use clap::Command;
 use rpassword;
+use pretty_env_logger;
 
 pub mod config;
 pub mod mail;
@@ -31,6 +33,9 @@ fn cli() -> Command {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    env::set_var("RUST_LOG", "info");
+    pretty_env_logger::init();
 
     let config_contents = match fs::read_to_string("config.toml") {
         Ok(contents) => contents,
