@@ -10,6 +10,8 @@ use crate::wr::WRs;
 
 #[derive(Debug, Serialize)]
 pub struct Stats {
+    // The year of the WRs
+    pub year: u32,
     // The number of WRs
     pub num_wrs: usize,
     // The number of WRs that were replied to
@@ -35,8 +37,9 @@ pub struct Stats {
 }
 
 impl Stats {
-    pub fn from_wrs(wrs: &WRs, num_holidays: u32) -> Self {
+    pub fn from_wrs(wrs: &WRs, year: u32, num_holidays: u32) -> Self {
         Stats {
+            year: year,
             num_wrs: wrs.num_wrs(),
             num_replied_wrs: wrs.num_replied_wrs(),
             ratio_replied_wrs: wrs.ratio_replied_wrs(),

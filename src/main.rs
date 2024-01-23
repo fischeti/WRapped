@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let wrs = mail::fetch_wrs(&config.mail)?;
             let replies = mail::fetch_replies(&config.mail)?;
             let merged_wrs = wr::merge_wrs(&wrs, &replies);
-            let stats = stats::Stats::from_wrs(&merged_wrs, config.stats.num_holidays);
+            let stats = stats::Stats::from_wrs(&merged_wrs, config.mail.fetch.year, config.stats.num_holidays);
             stats.write_to_file("shared/stats.json")?;
         },
     };

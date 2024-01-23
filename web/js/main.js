@@ -376,6 +376,7 @@ function updateCCList(ccData) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  const yearId = 'wrapped-year';
   const numWrsWrittenId = 'num-wrs-written';
   const numWrsSkippedId = 'num-wrs-skipped';
   const progressCircleId = 'progress-circle';
@@ -383,6 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const delayOfReplyId = 'delay-of-reply';
   const weekdayId = 'weekday-chart-container';
   const timeofdayId = 'timeofday-chart-container';
+  let year;
   let ratioRepliedWRs;
   let weekdayData;
   let timeofdayData;
@@ -431,10 +433,16 @@ document.addEventListener('DOMContentLoaded', function() {
     delayOfReplyContainer.textContent = delayDaysText;
   }
 
+  const yearContainer = document.getElementById(yearId);
+  function updateYear(year) {
+    yearContainer.textContent = year;
+  }
+
   fetch('../shared/stats.json')
     .then(response => response.json())
     .then(data => {
         // Now we have the JSON data
+        year = data.year;
         ratioRepliedWRs = data.ratio_replied_wrs;
         numWrsWritten = data.num_wrs;
         numWrsSkipped = data.num_skipped_wrs;
@@ -442,6 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         weekdayData = data.weekday_wr_histogram;
         timeofdayData = data.hour_reply_histogram;
         ccData = data.cc_histogram;
+        updateYear(year);
         updateNumWrsWritten(numWrsWritten);
         updateNumWrsSkipped(numWrsSkipped);
         updateTextOverlay(ratioRepliedWRs);
