@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use chrono::{Datelike, Timelike};
+use log::info;
 
 use crate::mail::Envelope;
 
@@ -26,7 +27,7 @@ pub fn merge_wrs(
             wrs.wrs.push(wr);
         }
 
-        println!("Found {} Replies to {} WRs", wrs.num_replied_wrs(), wrs.num_wrs());
+        info!("Found {} Replies to {} WRs", wrs.num_replied_wrs(), wrs.num_wrs());
         wrs
 }
 
