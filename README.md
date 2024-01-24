@@ -12,10 +12,8 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
 
 ## Getting Started
 
-1. Install the newest version of [Rust](https://rustup.rs), or update your current version:
-    ```bash
-    rustup update
-    ```
+1. Install [Rust](https://rustup.rs), if you don't have already
+
 2. Clone this repository and navigate into it:
     ```bash
     git clone https://github.com/fischeti/WRapped.git
@@ -27,10 +25,7 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
     ```bash
     cargo run
     ```
-5. Create a localhost server to view the app. For instance:
-    ```bash
-    python3 -m http.server
-    ```
+    which should automatically open a browser window with the statistics.
 
 ## Configuration
 
