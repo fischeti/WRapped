@@ -7,6 +7,13 @@
   --highlight-grey: #d2d2d2;
 }
 
+.palette-default {
+  --color-1: #143F6B;
+  --color-2: #F55353;
+  --color-3: #FEB139;
+  --color-4: #F6F54D;
+}
+
 .palette-2023 {
   --color-1: #22092C;
   --color-2: #872341;
@@ -15,10 +22,17 @@
 }
 
 .palette-2022 {
-  --color-1: #11009E;
-  --color-2: #4942E4;
-  --color-3: #E6B9DE;
-  --color-4: #FAE7F3;
+  --color-1: #0E131F;
+  --color-2: #38405F;
+  --color-3: #59546C;
+  --color-4: #FF0035;
+}
+
+.palette-2021 {
+  --color-1: #3A506B;
+  --color-2: #6C22A6;
+  --color-3: #5BC0BE;
+  --color-4: #6FFFE9;
 }
 
 body {

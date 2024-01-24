@@ -377,8 +377,10 @@ function updateCCList(ccData) {
 
 function switchPalette(year) {
   year = parseInt(year);
-  if (year <= 2023 && year >= 2022) {
+  if (year <= 2023 && year >= 2021) {
     document.body.className = "palette-" + year;
+  } else {
+    document.body.className = "palette-default";
   }
 }
 
