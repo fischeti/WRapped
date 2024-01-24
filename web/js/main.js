@@ -50,11 +50,11 @@ function drawProgessCircle(container_id, ratio) {
 
   gradient.append("stop")
     .attr("offset", "0%")
-    .attr("stop-color", "var(--color-palette-3)");
+    .attr("stop-color", "var(--color-3)");
 
   gradient.append("stop")
     .attr("offset", "100%")
-    .attr("stop-color", "var(--color-palette-4)");
+    .attr("stop-color", "var(--color-4)");
 
   // Apply the gradient to the arc
   const path = svg.append("path")
@@ -148,7 +148,7 @@ function drawBarChart(container_id, weekdayData) {
       .attr("x2", width)
       .attr("y1", d => y(d))
       .attr("y2", d => y(d))
-      .style("stroke", "var(--color-palette-2)")
+      .style("stroke", "var(--color-2)")
       .style("stroke-opacity", "0.5")
       .style("stroke-width", "1px")
       .style("stroke-dasharray", ("10, 10")); // Dashed line pattern
@@ -163,11 +163,11 @@ function drawBarChart(container_id, weekdayData) {
 
   gradient.append("stop")
     .attr("offset", "50%")
-    .attr("stop-color", "var(--color-palette-3)");
+    .attr("stop-color", "var(--color-3)");
 
   gradient.append("stop")
     .attr("offset", "100%")
-    .attr("stop-color", "var(--color-palette-4)");
+    .attr("stop-color", "var(--color-4)");
 
   // Create the bars
   svg.selectAll(".bar")
@@ -272,7 +272,7 @@ function drawTimeOfDayChart(container_id, timeOfDayData) {
       .attr("x2", d => x(d))
       .attr("y1", 0)
       .attr("y2", height)
-      .style("stroke", "var(--color-palette-2)")
+      .style("stroke", "var(--color-2)")
       .style("stroke-opacity", "0.5")
       .style("stroke-width", "1px")
       .style("stroke-dasharray", ("10, 10")); // Dashed line pattern
@@ -287,11 +287,11 @@ function drawTimeOfDayChart(container_id, timeOfDayData) {
 
     areaGradient.append("stop")
       .attr("offset", "50%")
-      .attr("stop-color", "var(--color-palette-3)");
+      .attr("stop-color", "var(--color-3)");
 
       areaGradient.append("stop")
       .attr("offset", "100%")
-      .attr("stop-color", "var(--color-palette-4)");
+      .attr("stop-color", "var(--color-4)");
 
     // Define a clip path
     const clip = defs.append("clipPath")
@@ -375,6 +375,15 @@ function updateCCList(ccData) {
   });
 }
 
+function switchPalette(year) {
+  year = parseInt(year);
+  if (year <= 2023 && year >= 2021) {
+    document.body.className = "palette-" + year;
+  } else {
+    document.body.className = "palette-default";
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const yearId = 'wrapped-year';
   const numWrsWrittenId = 'num-wrs-written';
@@ -443,6 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
         // Now we have the JSON data
         year = data.year;
+        switchPalette(year);
         ratioRepliedWRs = data.ratio_replied_wrs;
         numWrsWritten = data.num_wrs;
         numWrsSkipped = data.num_skipped_wrs;

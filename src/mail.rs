@@ -240,7 +240,13 @@ pub fn fetch_replies(
 
     for mailbox in config.fetch.re_mailboxes.iter() {
         // Select the mailbox
-        imap_session.select(mailbox)?;
+        match imap_session.select(mailbox) {
+            Ok(_) => {},
+            Err(e) => {
+                warn!("Could not select mailbox {}: {}", mailbox, e);
+                continue;
+            },
+        }
 
         // Search for messages that contain the pattern
         let sequence_set = imap_session.search(query.as_str())?;

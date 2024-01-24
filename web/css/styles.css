@@ -1,10 +1,38 @@
 :root {
-  --color-palette-1: #22092C;
-  --color-palette-2: #872341;
-  --color-palette-3: #BE3144;
-  --color-palette-4: #F05941;
+  /* --color-1: #22092C;
+  --color-2: #872341;
+  --color-3: #BE3144;
+  --color-4: #F05941; */
   --text-grey: #a3a3a3;
   --highlight-grey: #d2d2d2;
+}
+
+.palette-default {
+  --color-1: #143F6B;
+  --color-2: #F55353;
+  --color-3: #FEB139;
+  --color-4: #F6F54D;
+}
+
+.palette-2023 {
+  --color-1: #22092C;
+  --color-2: #872341;
+  --color-3: #BE3144;
+  --color-4: #F05941;
+}
+
+.palette-2022 {
+  --color-1: #0E131F;
+  --color-2: #38405F;
+  --color-3: #59546C;
+  --color-4: #FF0035;
+}
+
+.palette-2021 {
+  --color-1: #3A506B;
+  --color-2: #6C22A6;
+  --color-3: #5BC0BE;
+  --color-4: #6FFFE9;
 }
 
 body {
@@ -18,7 +46,7 @@ body {
   padding: 40px;
   overflow: hidden; /* This disables scrolling */
   box-sizing: border-box;
-  background-image: radial-gradient(ellipse at 62% 37%, var(--color-palette-3) 0%, var(--color-palette-2) 20%, var(--color-palette-1) 90%);
+  background-image: radial-gradient(ellipse at 62% 37%, var(--color-3) 0%, var(--color-2) 20%, var(--color-1) 90%);
 }
 
 .tile {
@@ -53,7 +81,7 @@ body {
 .highlighted-numbers {
   font-size: 5vw;
   font-weight: bold;
-  background: -webkit-linear-gradient(90deg, var(--color-palette-3), var(--color-palette-4));
+  background: -webkit-linear-gradient(90deg, var(--color-3), var(--color-4));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -71,7 +99,7 @@ body {
 #wrapped-tile .wrapped-highlight {
   font-size: 5vw;
   font-weight: bold;
-  background: -webkit-linear-gradient(left, var(--color-palette-2), var(--color-palette-4));
+  background: -webkit-linear-gradient(left, var(--color-2), var(--color-4));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -240,7 +268,7 @@ body {
   width: 50%;
   height: 100%;
   display: inline-block;
-  background: -webkit-linear-gradient(90deg, var(--color-palette-2), var(--color-palette-4));
+  background: -webkit-linear-gradient(90deg, var(--color-2), var(--color-4));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
