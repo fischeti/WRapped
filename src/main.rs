@@ -9,6 +9,7 @@ pub mod config;
 pub mod mail;
 pub mod wr;
 pub mod stats;
+pub mod server;
 
 fn cli() -> Command {
     Command::new("WRapped")
@@ -32,7 +33,8 @@ fn cli() -> Command {
         )
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[actix_web::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     env::set_var("RUST_LOG", "info");
     pretty_env_logger::init();
@@ -92,6 +94,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let merged_wrs = wr::merge_wrs(&wrs, &replies);
             let stats = stats::Stats::from_wrs(&merged_wrs, config.mail.fetch.year, config.stats.num_holidays);
             stats.write_to_file("shared/stats.json")?;
+            let localhost = "127.0.0.1:8080";
+            server::run_server(&localhost).await?;
         },
     };
 

@@ -438,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
     yearContainer.textContent = year;
   }
 
-  fetch('../shared/stats.json')
+  fetch('/stats/stats.json')
     .then(response => response.json())
     .then(data => {
         // Now we have the JSON data
