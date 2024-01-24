@@ -95,6 +95,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let stats = stats::Stats::from_wrs(&merged_wrs, config.mail.fetch.year, config.stats.num_holidays);
             stats.write_to_file("shared/stats.json")?;
             let localhost = "127.0.0.1:8080";
+            let url = format!("http://{}/", localhost);
+            server::open_browser(&url);
             server::run_server(&localhost).await?;
         },
     };

@@ -1,7 +1,17 @@
+use std::thread;
+use std::time::Duration;
+
 use actix_files as fs;
 use actix_web::{App, HttpServer};
 
 use log::{info, error};
+
+pub fn open_browser(server: &str) {
+    thread::sleep(Duration::from_secs(1));
+    if let Err(e) = open::that(server) {
+        error!("Failed to open browser: {}", e);
+    }
+}
 
 pub async fn run_server(server: &str) -> std::io::Result<()> {
 
