@@ -36,7 +36,7 @@ fn cli() -> Command {
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    env::set_var("RUST_LOG", "info");
+    env::set_var("RUST_LOG", "actix_server=warn,info");
     pretty_env_logger::init();
 
     let config_contents = match fs::read_to_string("config.toml") {
