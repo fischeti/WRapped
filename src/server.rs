@@ -4,7 +4,7 @@ use std::time::Duration;
 use actix_files as fs;
 use actix_web::{App, HttpServer};
 
-use log::{info, error};
+use log::{error, info};
 
 pub fn open_browser(server: &str) {
     thread::sleep(Duration::from_secs(1));
@@ -14,7 +14,6 @@ pub fn open_browser(server: &str) {
 }
 
 pub async fn run_server(server: &str) -> std::io::Result<()> {
-
     info!("Starting the web server at {}", server);
     HttpServer::new(move || {
         App::new()

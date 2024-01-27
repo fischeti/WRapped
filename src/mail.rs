@@ -1,36 +1,48 @@
+extern crate chrono;
 extern crate imap;
 extern crate native_tls;
-extern crate chrono;
 
+use chrono::{DateTime, FixedOffset};
 use imap::ImapConnection;
 use itertools::join;
-use chrono::{DateTime, FixedOffset};
-use std::str::from_utf8;
 use log::{info, warn};
+use std::str::from_utf8;
 
-use crate::config::{MailConfig, MailLogin, MailFetch};
+use crate::config::{MailConfig, MailFetch, MailLogin};
 use crate::error::{Result, WrError};
 
 #[derive(Debug, Clone)]
 pub struct Address {
     pub name: Option<String>,
     pub user: Option<String>,
-    pub email: Option<String>
+    pub email: Option<String>,
 }
 
 impl Address {
     pub fn from_imap_address(addr: &imap_proto::types::Address) -> Self {
         Address {
-            name: addr.name.as_ref().map(|s| String::from_utf8_lossy(s).to_string()),
-            user: addr.mailbox.as_ref().map(|s| String::from_utf8_lossy(s).to_string()),
+            name: addr
+                .name
+                .as_ref()
+                .map(|s| String::from_utf8_lossy(s).to_string()),
+            user: addr
+                .mailbox
+                .as_ref()
+                .map(|s| String::from_utf8_lossy(s).to_string()),
             email: {
-                let host = addr.host.as_ref().map(|s| String::from_utf8_lossy(s).to_string());
-                let mailbox = addr.mailbox.as_ref().map(|s| String::from_utf8_lossy(s).to_string());
+                let host = addr
+                    .host
+                    .as_ref()
+                    .map(|s| String::from_utf8_lossy(s).to_string());
+                let mailbox = addr
+                    .mailbox
+                    .as_ref()
+                    .map(|s| String::from_utf8_lossy(s).to_string());
                 match (mailbox, host) {
                     (Some(mailbox), Some(host)) => Some(format!("{}@{}", mailbox, host)),
                     _ => None,
                 }
-            }
+            },
         }
     }
 }
@@ -48,21 +60,31 @@ impl Envelope {
     pub fn from_imap_envelope(envelope: &imap_proto::types::Envelope) -> Self {
         Envelope {
             date: {
-                let date_str = envelope.date.as_ref().map(|s| String::from_utf8_lossy(s).to_string());
+                let date_str = envelope
+                    .date
+                    .as_ref()
+                    .map(|s| String::from_utf8_lossy(s).to_string());
                 DateTime::parse_from_rfc2822(&date_str.unwrap()).unwrap()
             },
             subject: String::from_utf8_lossy(envelope.subject.as_ref().unwrap()).to_string(),
-            cc: envelope.cc.as_ref().map(|cc| cc.iter().map(|addr| Address::from_imap_address(addr)).collect()),
-            in_reply_to: envelope.in_reply_to.as_ref().map(|s| String::from_utf8_lossy(s).to_string()),
-            message_id: envelope.message_id.as_ref().map(|s| String::from_utf8_lossy(s).to_string()),
+            cc: envelope.cc.as_ref().map(|cc| {
+                cc.iter()
+                    .map(|addr| Address::from_imap_address(addr))
+                    .collect()
+            }),
+            in_reply_to: envelope
+                .in_reply_to
+                .as_ref()
+                .map(|s| String::from_utf8_lossy(s).to_string()),
+            message_id: envelope
+                .message_id
+                .as_ref()
+                .map(|s| String::from_utf8_lossy(s).to_string()),
         }
     }
 }
 
-fn imap_login(
-    login: &MailLogin,
-) -> Result<imap::Session<Box<dyn ImapConnection>>> {
-
+fn imap_login(login: &MailLogin) -> Result<imap::Session<Box<dyn ImapConnection>>> {
     let domain = login.server.as_str();
     let port = login.port;
     let username = login.username.clone().unwrap();
@@ -72,17 +94,12 @@ fn imap_login(
     let client = imap::ClientBuilder::new(domain, port).connect()?;
 
     // Login to the IMAP server
-    let imap_session = client
-        .login(username, password)
-        .map_err(|e| e.0)?;
+    let imap_session = client.login(username, password).map_err(|e| e.0)?;
 
     Ok(imap_session)
 }
 
-pub fn list_mailboxes(
-    config: &MailConfig,
-) -> Result<()> {
-
+pub fn list_mailboxes(config: &MailConfig) -> Result<()> {
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
 
@@ -98,10 +115,7 @@ pub fn list_mailboxes(
     Ok(())
 }
 
-pub fn fetch_inbox(
-    config: &MailConfig,
-) -> Result<()> {
-
+pub fn fetch_inbox(config: &MailConfig) -> Result<()> {
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
 
@@ -127,10 +141,7 @@ pub fn fetch_inbox(
     Ok(())
 }
 
-fn build_imap_search_query(
-    fetch: &MailFetch
-) -> Result<String> {
-
+fn build_imap_search_query(fetch: &MailFetch) -> Result<String> {
     // Check that patterns is not empty
     if fetch.pattern.is_empty() {
         return Err(WrError::QueryError("No pattern specified".to_string()));
@@ -138,13 +149,18 @@ fn build_imap_search_query(
 
     // Check that patterns has at most two elements
     if fetch.pattern.len() > 2 {
-        return Err(WrError::QueryError("IMAP search query supports a maximum of two patterns".to_string()));
+        return Err(WrError::QueryError(
+            "IMAP search query supports a maximum of two patterns".to_string(),
+        ));
     }
 
     // Format the subject of the query
     let mut query = match fetch.pattern.len() {
         1 => format!("SUBJECT \"{}\"", fetch.pattern[0]),
-        2 => format!("SUBJECT \"{}\" OR SUBJECT \"{}\"", fetch.pattern[0], fetch.pattern[1]),
+        2 => format!(
+            "SUBJECT \"{}\" OR SUBJECT \"{}\"",
+            fetch.pattern[0], fetch.pattern[1]
+        ),
         _ => unreachable!(),
     };
 
@@ -158,10 +174,7 @@ fn build_imap_search_query(
     Ok(query)
 }
 
-pub fn fetch_wrs(
-    config: &MailConfig,
-) -> Result<Vec<Envelope>> {
-
+pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Envelope>> {
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
 
@@ -174,11 +187,11 @@ pub fn fetch_wrs(
     for mailbox in config.fetch.wr_mailboxes.iter() {
         // Select the mailbox
         match imap_session.select(mailbox) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => {
                 warn!("Could not select mailbox {}: {}", mailbox, e);
                 continue;
-            },
+            }
         }
 
         // Search for messages that contain the pattern
@@ -192,21 +205,22 @@ pub fn fetch_wrs(
         // Print the subjects of the messages
         for message in messages.iter() {
             let envelope = message.envelope().unwrap();
-            let reply_pattern= ["Re:", "RE:", "Aw:", "AW:"];
+            let reply_pattern = ["Re:", "RE:", "Aw:", "AW:"];
 
             match envelope.in_reply_to {
                 None => {
                     let env = Envelope::from_imap_envelope(envelope);
                     wrs.push(env);
-                },
+                }
                 Some(_) => {
-                    let subject = from_utf8(envelope.subject.as_ref().unwrap().as_ref()).expect("No subject in the envelope");
+                    let subject = from_utf8(envelope.subject.as_ref().unwrap().as_ref())
+                        .expect("No subject in the envelope");
                     if reply_pattern.iter().any(|&s| subject.contains(s)) {
                         continue;
                     }
                     let env = Envelope::from_imap_envelope(envelope);
                     wrs.push(env);
-                },
+                }
             };
         }
     }
@@ -217,13 +231,9 @@ pub fn fetch_wrs(
     Ok(wrs)
 }
 
-pub fn fetch_replies(
-    config: &MailConfig,
-) -> Result<Vec<Envelope>> {
-
+pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Envelope>> {
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
-
 
     let mut reply_fetch = config.fetch.clone();
     // Swap `from` and `to` in the fetch configuration
@@ -238,11 +248,11 @@ pub fn fetch_replies(
     for mailbox in config.fetch.re_mailboxes.iter() {
         // Select the mailbox
         match imap_session.select(mailbox) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => {
                 warn!("Could not select mailbox {}: {}", mailbox, e);
                 continue;
-            },
+            }
         }
 
         // Search for messages that contain the pattern
@@ -262,7 +272,7 @@ pub fn fetch_replies(
                 Some(_) => {
                     let env = Envelope::from_imap_envelope(envelope);
                     wr_replies.push(env);
-                    },
+                }
                 None => continue,
             };
         }
