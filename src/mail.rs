@@ -9,6 +9,7 @@ use std::str::from_utf8;
 use log::{info, warn};
 
 use crate::config::{MailConfig, MailLogin, MailFetch};
+use crate::error::{Result, WrError};
 
 #[derive(Debug, Clone)]
 pub struct Address {
@@ -60,7 +61,7 @@ impl Envelope {
 
 fn imap_login(
     login: &MailLogin,
-) -> imap::error::Result<imap::Session<Box<dyn ImapConnection>>> {
+) -> Result<imap::Session<Box<dyn ImapConnection>>> {
 
     let domain = login.server.as_str();
     let port = login.port;
@@ -80,7 +81,7 @@ fn imap_login(
 
 pub fn list_mailboxes(
     config: &MailConfig,
-) -> imap::error::Result<()> {
+) -> Result<()> {
 
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
@@ -99,7 +100,7 @@ pub fn list_mailboxes(
 
 pub fn fetch_inbox(
     config: &MailConfig,
-) -> imap::error::Result<()> {
+) -> Result<()> {
 
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
@@ -128,16 +129,16 @@ pub fn fetch_inbox(
 
 fn build_imap_search_query(
     fetch: &MailFetch
-) -> Result <String, String> {
+) -> Result<String> {
 
     // Check that patterns is not empty
     if fetch.pattern.is_empty() {
-        return Err("IMAP search query needs at least one pattern".to_string());
+        return Err(WrError::QueryError("No pattern specified".to_string()));
     }
 
     // Check that patterns has at most two elements
     if fetch.pattern.len() > 2 {
-        return Err("IMAP search query supports a maximum of two patterns".to_string());
+        return Err(WrError::QueryError("IMAP search query supports a maximum of two patterns".to_string()));
     }
 
     // Format the subject of the query
@@ -159,15 +160,13 @@ fn build_imap_search_query(
 
 pub fn fetch_wrs(
     config: &MailConfig,
-) -> imap::error::Result<Vec<Envelope>> {
+) -> Result<Vec<Envelope>> {
 
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
 
     // Search for messages that contain the pattern
-    let query = build_imap_search_query(&config.fetch)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-
+    let query = build_imap_search_query(&config.fetch)?;
 
     // List of WRs
     let mut wrs = Vec::new();
@@ -220,7 +219,7 @@ pub fn fetch_wrs(
 
 pub fn fetch_replies(
     config: &MailConfig,
-) -> imap::error::Result<Vec<Envelope>> {
+) -> Result<Vec<Envelope>> {
 
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.login)?;
@@ -231,8 +230,7 @@ pub fn fetch_replies(
     std::mem::swap(&mut reply_fetch.from, &mut reply_fetch.to);
 
     // Search for messages that contain the pattern
-    let query = build_imap_search_query(&reply_fetch)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+    let query = build_imap_search_query(&reply_fetch)?;
 
     // List of WRs
     let mut wr_replies = Vec::new();

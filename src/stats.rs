@@ -6,6 +6,7 @@ use std::path::Path;
 use serde::Serialize;
 use serde_json;
 
+use crate::error::{Result, WrError};
 use crate::wr::WRs;
 
 #[derive(Debug, Serialize)]
@@ -54,7 +55,7 @@ impl Stats {
         }
     }
 
-    pub fn write_to_file(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn write_to_file(&self, file_path: &str) -> Result<()> {
         // Create the directory path if it doesn't exist
         let path = Path::new(file_path);
         if let Some(dir_path) = path.parent() {
@@ -62,7 +63,8 @@ impl Stats {
         }
 
         // Serialize and write to the file
-        let serialized = serde_json::to_string_pretty(&self)?;
+        let serialized = serde_json::to_string_pretty(&self)
+            .map_err(|e| WrError::SerializationError(e.to_string()))?;
         let mut file = File::create(path)?;
         file.write_all(serialized.as_bytes())?;
         Ok(())
