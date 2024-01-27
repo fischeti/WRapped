@@ -2,8 +2,8 @@ extern crate imap;
 extern crate native_tls;
 extern crate chrono;
 
+use imap::ImapConnection;
 use itertools::join;
-use native_tls::TlsConnector;
 use chrono::{DateTime, FixedOffset};
 use std::str::from_utf8;
 use log::{info, warn};
@@ -60,7 +60,7 @@ impl Envelope {
 
 fn imap_login(
     login: &MailLogin,
-) -> imap::error::Result<imap::Session<native_tls::TlsStream<std::net::TcpStream>>> {
+) -> imap::error::Result<imap::Session<Box<dyn ImapConnection>>> {
 
     let domain = login.server.as_str();
     let port = login.port;
@@ -68,8 +68,7 @@ fn imap_login(
     let password = login.password.clone().unwrap();
 
     // Connect to the IMAP server
-    let tls = TlsConnector::builder().build().unwrap();
-    let client = imap::connect((domain, port), domain, &tls).unwrap();
+    let client = imap::ClientBuilder::new(domain, port).connect()?;
 
     // Login to the IMAP server
     let imap_session = client
@@ -118,7 +117,7 @@ pub fn fetch_inbox(
 
     // Print the subject of the message
     let envelope = message.envelope().unwrap();
-    let subject = envelope.subject.unwrap();
+    let subject = envelope.subject.as_ref().unwrap().as_ref();
     let subject_str = std::str::from_utf8(subject).unwrap();
     info!("Got Mail with Subject: {}", subject_str);
 
@@ -167,7 +166,7 @@ pub fn fetch_wrs(
 
     // Search for messages that contain the pattern
     let query = build_imap_search_query(&config.fetch)
-        .map_err(|e| imap::error::Error::Bad(e))?;
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
 
     // List of WRs
@@ -202,7 +201,7 @@ pub fn fetch_wrs(
                     wrs.push(env);
                 },
                 Some(_) => {
-                    let subject = from_utf8(envelope.subject.unwrap()).expect("No subject in the envelope");
+                    let subject = from_utf8(envelope.subject.as_ref().unwrap().as_ref()).expect("No subject in the envelope");
                     if reply_pattern.iter().any(|&s| subject.contains(s)) {
                         continue;
                     }
@@ -233,7 +232,7 @@ pub fn fetch_replies(
 
     // Search for messages that contain the pattern
     let query = build_imap_search_query(&reply_fetch)
-        .map_err(|e| imap::error::Error::Bad(e))?;
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
     // List of WRs
     let mut wr_replies = Vec::new();
