@@ -6,8 +6,8 @@ use crate::mail::Envelope;
 
 
 pub fn merge_wrs(
-    wr: &Vec<Envelope>,
-    wr_re: &Vec<Envelope>,
+    wr: &[Envelope],
+    wr_re: &[Envelope],
 ) -> WRs {
 
         let mut wrs = WRs::new();
@@ -63,7 +63,7 @@ impl WR {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct WRs {
     // All the WRs that were sent and received
     pub wrs: Vec<WR>,
@@ -128,7 +128,7 @@ impl WRs {
         let mut hist = HashMap::new();
 
         for day in 0..7 {
-            hist.insert(day,  0 as u32);
+            hist.insert(day,  0);
         }
         for wr in self.wrs.iter() {
             let weekday = wr.sent.date.weekday();
@@ -141,7 +141,7 @@ impl WRs {
         let mut hist = HashMap::new();
 
         for day in 0..7 {
-            hist.insert(day,  0 as u32);
+            hist.insert(day,  0);
         }
         for wr in self.wrs.iter() {
             match wr.reply {
@@ -159,7 +159,7 @@ impl WRs {
         let mut hist = HashMap::new();
 
         for hour in 0..24 {
-            hist.insert(hour,  0 as u32);
+            hist.insert(hour,  0);
         }
         for wr in self.wrs.iter() {
             let hour = wr.sent.date.hour();
@@ -172,7 +172,7 @@ impl WRs {
         let mut hist = HashMap::new();
 
         for hour in 0..24 {
-            hist.insert(hour,  0 as u32);
+            hist.insert(hour,  0);
         }
         for wr in self.wrs.iter() {
             match wr.reply {
@@ -194,7 +194,7 @@ impl WRs {
                 Some(ref cc) => {
                     for addr in cc.iter() {
                         if let Some(user) = &addr.user {
-                            hist.entry(user.to_string()).and_modify(|e| *e += 1).or_insert(1 as u32);
+                            hist.entry(user.to_string()).and_modify(|e| *e += 1).or_insert(1);
                         }
                     }
                 },

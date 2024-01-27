@@ -2,8 +2,6 @@ use std::fs;
 use std::env;
 
 use clap::Command;
-use rpassword;
-use pretty_env_logger;
 
 pub mod config;
 pub mod error;
@@ -80,7 +78,7 @@ async fn main() -> Result<()> {
             let localhost = "127.0.0.1:8080";
             let url = format!("http://{}/", localhost);
             server::open_browser(&url);
-            server::run_server(&localhost).await?;
+            server::run_server(localhost).await?;
             Ok(())
         },
     }?;

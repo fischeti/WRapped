@@ -40,7 +40,7 @@ pub struct Stats {
 impl Stats {
     pub fn from_wrs(wrs: &WRs, year: u32, num_holidays: u32) -> Self {
         Stats {
-            year: year,
+            year,
             num_wrs: wrs.num_wrs(),
             num_replied_wrs: wrs.num_replied_wrs(),
             ratio_replied_wrs: wrs.ratio_replied_wrs(),

@@ -192,7 +192,7 @@ pub fn fetch_wrs(
         // Print the subjects of the messages
         for message in messages.iter() {
             let envelope = message.envelope().unwrap();
-            let reply_pattern= vec!["Re:", "RE:", "Aw:", "AW:"];
+            let reply_pattern= ["Re:", "RE:", "Aw:", "AW:"];
 
             match envelope.in_reply_to {
                 None => {
