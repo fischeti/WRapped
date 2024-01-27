@@ -1,7 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Deserialize)]
-#[derive(Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Config {
     // The mail configuration
     pub mail: MailConfig,
@@ -9,8 +8,7 @@ pub struct Config {
     pub stats: StatsConfig,
 }
 
-#[derive(Deserialize)]
-#[derive(Debug)]
+#[derive(Deserialize, Debug)]
 pub struct MailConfig {
     // The login configuration
     pub login: MailLogin,
@@ -18,8 +16,7 @@ pub struct MailConfig {
     pub fetch: MailFetch,
 }
 
-#[derive(Deserialize)]
-#[derive(Debug)]
+#[derive(Deserialize, Debug)]
 pub struct MailLogin {
     // The IMAP server to connect to
     pub server: String,
@@ -31,9 +28,7 @@ pub struct MailLogin {
     pub password: Option<String>,
 }
 
-#[derive(Deserialize)]
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MailFetch {
     // The mailboxes to fetch from the WRs you sent
     pub wr_mailboxes: Vec<String>,
@@ -49,8 +44,7 @@ pub struct MailFetch {
     pub year: u32,
 }
 
-#[derive(Deserialize)]
-#[derive(Debug)]
+#[derive(Deserialize, Debug)]
 pub struct StatsConfig {
     // The number of holiday weeks you took this year, where you didn't had
     // to write a WR, this includes sick days, vacation, etc.

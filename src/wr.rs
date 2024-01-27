@@ -1,34 +1,33 @@
-use std::collections::HashMap;
 use chrono::{Datelike, Timelike};
 use log::info;
+use std::collections::HashMap;
 
 use crate::mail::Envelope;
 
+pub fn merge_wrs(wr: &[Envelope], wr_re: &[Envelope]) -> WRs {
+    let mut wrs = WRs::new();
 
-pub fn merge_wrs(
-    wr: &Vec<Envelope>,
-    wr_re: &Vec<Envelope>,
-) -> WRs {
-
-        let mut wrs = WRs::new();
-
-        for w in wr.iter() {
-            let mut wr = WR::new(w.clone(), None);
-            for r in wr_re.iter() {
-                if let Some(message_id) = wr.sent.message_id.as_ref() {
-                    if let Some(in_reply_to) = r.in_reply_to.as_ref() {
-                        if message_id.eq(in_reply_to) {
-                            wr.reply = Some(r.clone());
-                            break;
-                        }
+    for w in wr.iter() {
+        let mut wr = WR::new(w.clone(), None);
+        for r in wr_re.iter() {
+            if let Some(message_id) = wr.sent.message_id.as_ref() {
+                if let Some(in_reply_to) = r.in_reply_to.as_ref() {
+                    if message_id.eq(in_reply_to) {
+                        wr.reply = Some(r.clone());
+                        break;
                     }
                 }
             }
-            wrs.wrs.push(wr);
         }
+        wrs.wrs.push(wr);
+    }
 
-        info!("Found {} Replies to {} WRs", wrs.num_replied_wrs(), wrs.num_wrs());
-        wrs
+    info!(
+        "Found {} Replies to {} WRs",
+        wrs.num_replied_wrs(),
+        wrs.num_wrs()
+    );
+    wrs
 }
 
 #[derive(Debug)]
@@ -63,7 +62,7 @@ impl WR {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct WRs {
     // All the WRs that were sent and received
     pub wrs: Vec<WR>,
@@ -71,9 +70,7 @@ pub struct WRs {
 
 impl WRs {
     pub fn new() -> Self {
-        WRs {
-            wrs: Vec::new(),
-        }
+        WRs { wrs: Vec::new() }
     }
 
     pub fn push(&mut self, wr: WR) {
@@ -128,7 +125,7 @@ impl WRs {
         let mut hist = HashMap::new();
 
         for day in 0..7 {
-            hist.insert(day,  0 as u32);
+            hist.insert(day, 0);
         }
         for wr in self.wrs.iter() {
             let weekday = wr.sent.date.weekday();
@@ -141,14 +138,14 @@ impl WRs {
         let mut hist = HashMap::new();
 
         for day in 0..7 {
-            hist.insert(day,  0 as u32);
+            hist.insert(day, 0);
         }
         for wr in self.wrs.iter() {
             match wr.reply {
                 Some(_) => {
                     let weekday = wr.sent.date.weekday();
                     hist.entry(weekday as u32).and_modify(|e| *e += 1);
-                },
+                }
                 None => continue,
             };
         }
@@ -159,7 +156,7 @@ impl WRs {
         let mut hist = HashMap::new();
 
         for hour in 0..24 {
-            hist.insert(hour,  0 as u32);
+            hist.insert(hour, 0);
         }
         for wr in self.wrs.iter() {
             let hour = wr.sent.date.hour();
@@ -172,14 +169,14 @@ impl WRs {
         let mut hist = HashMap::new();
 
         for hour in 0..24 {
-            hist.insert(hour,  0 as u32);
+            hist.insert(hour, 0);
         }
         for wr in self.wrs.iter() {
             match wr.reply {
                 Some(_) => {
                     let hour = wr.sent.date.hour();
                     hist.entry(hour).and_modify(|e| *e += 1);
-                },
+                }
                 None => continue,
             };
         }
@@ -194,14 +191,15 @@ impl WRs {
                 Some(ref cc) => {
                     for addr in cc.iter() {
                         if let Some(user) = &addr.user {
-                            hist.entry(user.to_string()).and_modify(|e| *e += 1).or_insert(1 as u32);
+                            hist.entry(user.to_string())
+                                .and_modify(|e| *e += 1)
+                                .or_insert(1);
                         }
                     }
-                },
+                }
                 None => continue,
             };
         }
         hist
     }
-
 }
