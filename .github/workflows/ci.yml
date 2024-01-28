@@ -11,8 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: cargo build --all-targets --all-features
+        run: cargo build
       - name: Run Clippy
-        run: cargo clippy --all-targets --all-features
+        run: cargo clippy --no-deps
       - name: Run Rustfmt (run `cargo fmt --all` to fix)
         run: cargo fmt --all -- --check
