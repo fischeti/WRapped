@@ -387,7 +387,7 @@ function switchPalette(year) {
 document.addEventListener('DOMContentLoaded', function() {
   const yearId = 'wrapped-year';
   const numWrsWrittenId = 'num-wrs-written';
-  const numWrsSkippedId = 'num-wrs-skipped';
+  const numWordsId = 'num-words';
   const progressCircleId = 'progress-circle';
   const ratioTextOverlayId = 'ratio-text-overlay';
   const delayOfReplyId = 'delay-of-reply';
@@ -398,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let weekdayData;
   let timeofdayData;
   let numWrsWritten;
-  let numWrsSkipped;
+  let numWords;
   let ccData;
 
   const numWrsWrittenContainer= document.getElementById(numWrsWrittenId);
@@ -407,10 +407,10 @@ document.addEventListener('DOMContentLoaded', function() {
     numWrsWrittenContainer.textContent = numWrsText;
   }
 
-  const numWrsSkippedContainer = document.getElementById(numWrsSkippedId);
-  function updateNumWrsSkipped(numWrs) {
-    const numWrsText = numWrs + " WRs"
-    numWrsSkippedContainer.textContent = numWrsText;
+  const numWordsContainer = document.getElementById(numWordsId);
+  function updateNumWords(NumWords) {
+    const NumWordsText = parseInt(parseInt(NumWords) / 1000) + "k"
+    numWordsContainer.textContent = NumWordsText;
   }
 
   function resizeProgressCircleChart() {
@@ -455,14 +455,14 @@ document.addEventListener('DOMContentLoaded', function() {
         switchPalette(year);
         ratioRepliedWRs = data.ratio_replied_wrs;
         numWrsWritten = data.num_wrs;
-        numWrsSkipped = data.num_skipped_wrs;
+        numWords = data.num_words;
         delayDays = data.avg_reply_delay;
         weekdayData = data.weekday_wr_histogram;
         timeofdayData = data.hour_reply_histogram;
         ccData = data.cc_histogram;
         updateYear(year);
         updateNumWrsWritten(numWrsWritten);
-        updateNumWrsSkipped(numWrsSkipped);
+        updateNumWords(numWords);
         updateTextOverlay(ratioRepliedWRs);
         updateDelay(delayDays);
         updateCCList(ccData);
