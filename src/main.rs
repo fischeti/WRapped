@@ -30,10 +30,10 @@ async fn main() -> Result<()> {
     let config_contents = fs::read_to_string("config.toml")
         .map_err(|_| WrError::ConfigError("Could not read config file".to_string()))?;
 
-    let mut config: config::Config = toml::from_str(&config_contents)
+    let mut mail_config: config::MailConfig = toml::from_str(&config_contents)
         .map_err(|_| WrError::ConfigError("Could not parse config file".to_string()))?;
 
-    let username = match config.mail.login.username {
+    let username = match mail_config.server.username {
         Some(username) => Some(username),
         None => {
             eprint!("Username: ");
@@ -43,28 +43,24 @@ async fn main() -> Result<()> {
         }
     };
 
-    let password = match config.mail.login.password {
+    let password = match mail_config.server.password {
         Some(password) => Some(password),
         None => Some(rpassword::prompt_password("Password: ").unwrap()),
     };
 
-    config.mail.login.username = username;
-    config.mail.login.password = password;
+    mail_config.server.username = username;
+    mail_config.server.password = password;
 
     let matches = cli().get_matches();
 
     match matches.subcommand() {
-        Some(("mailboxes", _)) => mail::list_mailboxes(&config.mail),
-        Some(("fetch-inbox", _)) => mail::fetch_inbox(&config.mail),
+        Some(("mailboxes", _)) => mail::list_mailboxes(&mail_config),
+        Some(("fetch-inbox", _)) => mail::fetch_inbox(&mail_config),
         _ => {
-            let wrs = mail::fetch_wrs(&config.mail)?;
-            let replies = mail::fetch_replies(&config.mail)?;
+            let wrs = mail::fetch_wrs(&mail_config)?;
+            let replies = mail::fetch_replies(&mail_config)?;
             let merged_wrs = wr::merge_wrs(&wrs, &replies);
-            let stats = stats::Stats::from_wrs(
-                &merged_wrs,
-                config.mail.fetch.year,
-                config.stats.num_holidays,
-            );
+            let stats = stats::Stats::from_wrs(&merged_wrs, mail_config.query.year);
             stats.write_to_file("shared/stats.json")?;
             let localhost = "127.0.0.1:8080";
             let url = format!("http://{}/", localhost);

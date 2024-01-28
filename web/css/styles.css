@@ -129,7 +129,7 @@ body {
   justify-content: center;
 }
 
-#num-skipped-wrs-tile {
+#num-words-tile {
   grid-column: 1 / 3;
   grid-row: 2 / 3;
   display: flex;

@@ -37,20 +37,23 @@ The configuration file is written in [TOML](https://toml.io). To login to your E
 server = "my.mail.server"
 # The port to connect to
 port = 993
-# (Optional) The username to use for authentication
-# username = "my_username"
-# (Optional) The password to use for authentication
-# password = "my_password"
 ```
 The configure which E-Mails to search for and fetch, you need to provide the following information:
 
 ```toml
 [mail.fetch]
-# The mailboxes to fetch from the WRs you sent, you can also run `cargo run mailboxes` to get a list of all mailboxes you have.
+# The mailboxes to fetch from the WRs you sent,
+# you can also run `cargo run mailboxes` to get a list of all mailboxes you have.
 wr_mailboxes = ["Sent", "Sent Messages"]
-# The mailboxes to fetch from the WR replies you received. Usually you only need to fetch from the INBOX. However, if you have a rule that moves the WR replies to a different mailbox, you need to add it here.
+# The mailboxes to fetch from the WR replies you received.
+# Usually you only need to fetch from the INBOX. However,
+# if you have a rule that moves the WR replies to a different mailbox,
+# you need to add it here.
 re_mailboxes = ["INBOX"]
-# The pattern to match the WR subject you sent. This will match all subjects that contain the strings "WR" OR "Weekly Report". This means that your Subject needs to be consistent over the years. Currently, you can only match at most two patterns (this is a limitation of the IMAP search query).
+# The pattern to match the WR subject you sent.
+# This will match all subjects that contain the strings "WR" OR "Weekly Report".
+# This means that your Subject needs to be consistent over the years.
+# Currently, you can only match at most two patterns (this is a limitation of the IMAP search query).
 pattern = ["WR", "Weekly Report"]
 # From which mail address you sent the WRs
 from = "my_username@my.mail.server"
@@ -58,14 +61,6 @@ from = "my_username@my.mail.server"
 to = "theboss@my.mail.server"
 # The year to fetch the WRs from
 year = 2023
-```
-
-Lastly, you have to configure a few things how the statistics are generated:
-
-```toml
-[stats]
-# The number of holiday weeks you were not working. This includes holidays, sick days, etc.
-num_holidays = 5
 ```
 
 ## How it works
@@ -76,7 +71,7 @@ The script works by connecting to your E-Mail account using IMAP. It then search
 FROM "my_username@my.mail.server" TO "theboss@my.mail.server" SUBJECT "WR" OR SUBJECT "Weekly Report" SINCE 01-Jan-2023 BEFORE 31-Dec-2023
 ```
 
-which will return a sequence of E-Mail IDs. The script then fetches only the header (or `ENVELOPE` in IMAP terms) of each E-Mail, which contains information such as the date, the sender, the recipient, etc. The content of the mail is not fetched at all. The script then parses the date and sender information to create a list of WRs.
+which will return a sequence of E-Mail IDs. The script then fetches first the header (or `ENVELOPE` in IMAP terms) of each E-Mail, which contains information such as the date, the sender, the recipient, etc. In a second step, the content (or `BODY` in IMAP terms) is fetched and merged with the header to create a list of WRs.
 
 The replies are fetched in a similar way, but the other way around:
 

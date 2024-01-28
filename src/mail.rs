@@ -5,10 +5,11 @@ extern crate native_tls;
 use chrono::{DateTime, FixedOffset};
 use imap::ImapConnection;
 use itertools::join;
+use log::debug;
 use log::{info, warn};
 use std::str::from_utf8;
 
-use crate::config::{MailConfig, MailFetch, MailLogin};
+use crate::config::{MailConfig, MailLogin, MailQuery};
 use crate::error::{Result, WrError};
 
 #[derive(Debug, Clone)]
@@ -84,6 +85,13 @@ impl Envelope {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct Mail {
+    pub id: u32,
+    pub env: Envelope,
+    pub body: Option<String>,
+}
+
 fn imap_login(login: &MailLogin) -> Result<imap::Session<Box<dyn ImapConnection>>> {
     let domain = login.server.as_str();
     let port = login.port;
@@ -101,7 +109,7 @@ fn imap_login(login: &MailLogin) -> Result<imap::Session<Box<dyn ImapConnection>
 
 pub fn list_mailboxes(config: &MailConfig) -> Result<()> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.login)?;
+    let mut imap_session = imap_login(&config.server)?;
 
     // List all mailboxes
     let mailboxes = imap_session.list(Some(""), Some("*"))?;
@@ -117,7 +125,7 @@ pub fn list_mailboxes(config: &MailConfig) -> Result<()> {
 
 pub fn fetch_inbox(config: &MailConfig) -> Result<()> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.login)?;
+    let mut imap_session = imap_login(&config.server)?;
 
     // Select the INBOX mailbox
     imap_session.select("INBOX")?;
@@ -141,7 +149,7 @@ pub fn fetch_inbox(config: &MailConfig) -> Result<()> {
     Ok(())
 }
 
-fn build_imap_search_query(fetch: &MailFetch) -> Result<String> {
+fn build_imap_search_query(fetch: &MailQuery) -> Result<String> {
     // Check that patterns is not empty
     if fetch.pattern.is_empty() {
         return Err(WrError::QueryError("No pattern specified".to_string()));
@@ -174,17 +182,36 @@ fn build_imap_search_query(fetch: &MailFetch) -> Result<String> {
     Ok(query)
 }
 
-pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Envelope>> {
+fn get_plain_text(mail: &mailparse::ParsedMail) -> Result<String> {
+    if mail.subparts.is_empty() && mail.ctype.mimetype == "text/plain" {
+        let body = mail
+            .get_body()
+            .map_err(|_| WrError::MailParseError("Failed to parse mail body".to_string()))?;
+        return Ok(body);
+    }
+    let mut body_str: String = String::new();
+    for part in mail.subparts.iter() {
+        let body = part.get_body()?;
+        if part.ctype.mimetype == "text/plain" {
+            body_str.push_str(&body);
+        } else {
+            body_str.push_str(&get_plain_text(part)?);
+        }
+    }
+    Ok(body_str)
+}
+
+pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Mail>> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.login)?;
+    let mut imap_session = imap_login(&config.server)?;
 
     // Search for messages that contain the pattern
-    let query = build_imap_search_query(&config.fetch)?;
+    let query = build_imap_search_query(&config.query)?;
 
     // List of WRs
     let mut wrs = Vec::new();
 
-    for mailbox in config.fetch.wr_mailboxes.iter() {
+    for mailbox in config.query.wr_mailboxes.iter() {
         // Select the mailbox
         match imap_session.select(mailbox) {
             Ok(_) => {}
@@ -199,8 +226,11 @@ pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Envelope>> {
         let mut sequence_set: Vec<_> = sequence_set.into_iter().collect();
         sequence_set.sort();
         let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
+
         // Fetch the messages
+        info!("Fetching envelope of {} potential WRs", sequence_set.len());
         let messages = imap_session.fetch(sequence_set, "ENVELOPE")?;
+        debug!("Got {} messages", messages.len());
 
         // Print the subjects of the messages
         for message in messages.iter() {
@@ -210,32 +240,57 @@ pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Envelope>> {
             match envelope.in_reply_to {
                 None => {
                     let env = Envelope::from_imap_envelope(envelope);
-                    wrs.push(env);
+                    debug!("Found WR with subject: {}", env.subject);
+                    wrs.push(Mail {
+                        id: message.message,
+                        env,
+                        body: None,
+                    });
                 }
                 Some(_) => {
                     let subject = from_utf8(envelope.subject.as_ref().unwrap().as_ref())
                         .expect("No subject in the envelope");
                     if reply_pattern.iter().any(|&s| subject.contains(s)) {
+                        debug!("Skipping reply with subject: {}", subject);
                         continue;
                     }
                     let env = Envelope::from_imap_envelope(envelope);
-                    wrs.push(env);
+                    wrs.push(Mail {
+                        id: message.message,
+                        env,
+                        body: None,
+                    });
                 }
             };
         }
-    }
 
-    info!("Found {} WRs", wrs.len());
+        info!("Found {} WRs", wrs.len());
+
+        // Construct a new sequence set of all the WRs
+        let sequence_set: Vec<u32> = wrs.iter().map(|m: &Mail| m.id).collect();
+        let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
+
+        // Fetch the bodies of the WRs
+        info!("Fetching bodies of {} WRs", wrs.len());
+        let messages = imap_session.fetch(sequence_set, "BODY[]")?;
+
+        // Add the text of the body to the WRs
+        for (message, wr) in messages.iter().zip(wrs.iter_mut()) {
+            let body = message.body().unwrap();
+            let parsed_mail = mailparse::parse_mail(body)?;
+            wr.body = get_plain_text(&parsed_mail).ok(); // If an error occurs, just skip the body
+        }
+    }
 
     imap_session.logout()?;
     Ok(wrs)
 }
 
-pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Envelope>> {
+pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Mail>> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.login)?;
+    let mut imap_session = imap_login(&config.server)?;
 
-    let mut reply_fetch = config.fetch.clone();
+    let mut reply_fetch = config.query.clone();
     // Swap `from` and `to` in the fetch configuration
     std::mem::swap(&mut reply_fetch.from, &mut reply_fetch.to);
 
@@ -245,7 +300,7 @@ pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Envelope>> {
     // List of WRs
     let mut wr_replies = Vec::new();
 
-    for mailbox in config.fetch.re_mailboxes.iter() {
+    for mailbox in config.query.re_mailboxes.iter() {
         // Select the mailbox
         match imap_session.select(mailbox) {
             Ok(_) => {}
@@ -262,6 +317,7 @@ pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Envelope>> {
         let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
 
         // Fetch the messages
+        info!("Fetching {} potential Replies", sequence_set.len());
         let messages = imap_session.fetch(sequence_set, "ENVELOPE")?;
 
         // Print the subjects of the messages
@@ -271,7 +327,11 @@ pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Envelope>> {
             match envelope.in_reply_to {
                 Some(_) => {
                     let env = Envelope::from_imap_envelope(envelope);
-                    wr_replies.push(env);
+                    wr_replies.push(Mail {
+                        id: message.message,
+                        env,
+                        body: None,
+                    });
                 }
                 None => continue,
             };

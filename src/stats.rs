@@ -19,8 +19,8 @@ pub struct Stats {
     pub num_replied_wrs: usize,
     // The ratio of WRs that were replied to
     pub ratio_replied_wrs: f64,
-    // The number of skipped WRs
-    pub num_skipped_wrs: usize,
+    // The number of words written
+    pub num_words: usize,
     // The average delay of the WRs
     pub avg_wr_delay: f64,
     // The average delay of the replied WRs
@@ -38,13 +38,13 @@ pub struct Stats {
 }
 
 impl Stats {
-    pub fn from_wrs(wrs: &WRs, year: u32, num_holidays: u32) -> Self {
+    pub fn from_wrs(wrs: &WRs, year: u32) -> Self {
         Stats {
             year,
             num_wrs: wrs.num_wrs(),
             num_replied_wrs: wrs.num_replied_wrs(),
             ratio_replied_wrs: wrs.ratio_replied_wrs(),
-            num_skipped_wrs: wrs.num_skipped_wrs(num_holidays),
+            num_words: wrs.num_words(),
             avg_wr_delay: wrs.avg_wr_delay(),
             avg_reply_delay: wrs.avg_reply_delay(),
             weekday_wr_histogram: wrs.weekday_wr_histogram(),
