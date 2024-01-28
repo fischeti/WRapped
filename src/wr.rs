@@ -97,10 +97,6 @@ impl WRs {
         self.wrs.iter().filter(|wr| wr.reply.is_some()).count()
     }
 
-    pub fn num_skipped_wrs(&self, num_holidays: u32) -> usize {
-        let num_holidays = num_holidays as usize;
-        let num_wrs = self.num_wrs();
-        52 - num_holidays - num_wrs
     }
 
     pub fn ratio_replied_wrs(&self) -> f64 {

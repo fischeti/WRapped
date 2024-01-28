@@ -8,7 +8,7 @@ use itertools::join;
 use log::{info, warn};
 use std::str::from_utf8;
 
-use crate::config::{MailConfig, MailFetch, MailLogin};
+use crate::config::{MailConfig, MailLogin, MailQuery};
 use crate::error::{Result, WrError};
 
 #[derive(Debug, Clone)]
@@ -101,7 +101,7 @@ fn imap_login(login: &MailLogin) -> Result<imap::Session<Box<dyn ImapConnection>
 
 pub fn list_mailboxes(config: &MailConfig) -> Result<()> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.login)?;
+    let mut imap_session = imap_login(&config.server)?;
 
     // List all mailboxes
     let mailboxes = imap_session.list(Some(""), Some("*"))?;
@@ -117,7 +117,7 @@ pub fn list_mailboxes(config: &MailConfig) -> Result<()> {
 
 pub fn fetch_inbox(config: &MailConfig) -> Result<()> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.login)?;
+    let mut imap_session = imap_login(&config.server)?;
 
     // Select the INBOX mailbox
     imap_session.select("INBOX")?;
@@ -141,7 +141,7 @@ pub fn fetch_inbox(config: &MailConfig) -> Result<()> {
     Ok(())
 }
 
-fn build_imap_search_query(fetch: &MailFetch) -> Result<String> {
+fn build_imap_search_query(fetch: &MailQuery) -> Result<String> {
     // Check that patterns is not empty
     if fetch.pattern.is_empty() {
         return Err(WrError::QueryError("No pattern specified".to_string()));
@@ -174,17 +174,17 @@ fn build_imap_search_query(fetch: &MailFetch) -> Result<String> {
     Ok(query)
 }
 
-pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Envelope>> {
+pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Mail>> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.login)?;
+    let mut imap_session = imap_login(&config.server)?;
 
     // Search for messages that contain the pattern
-    let query = build_imap_search_query(&config.fetch)?;
+    let query = build_imap_search_query(&config.query)?;
 
     // List of WRs
     let mut wrs = Vec::new();
 
-    for mailbox in config.fetch.wr_mailboxes.iter() {
+    for mailbox in config.query.wr_mailboxes.iter() {
         // Select the mailbox
         match imap_session.select(mailbox) {
             Ok(_) => {}
@@ -233,9 +233,9 @@ pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Envelope>> {
 
 pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Envelope>> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.login)?;
+    let mut imap_session = imap_login(&config.server)?;
 
-    let mut reply_fetch = config.fetch.clone();
+    let mut reply_fetch = config.query.clone();
     // Swap `from` and `to` in the fetch configuration
     std::mem::swap(&mut reply_fetch.from, &mut reply_fetch.to);
 
@@ -245,7 +245,7 @@ pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Envelope>> {
     // List of WRs
     let mut wr_replies = Vec::new();
 
-    for mailbox in config.fetch.re_mailboxes.iter() {
+    for mailbox in config.query.re_mailboxes.iter() {
         // Select the mailbox
         match imap_session.select(mailbox) {
             Ok(_) => {}
