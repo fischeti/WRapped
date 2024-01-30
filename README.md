@@ -32,7 +32,7 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
 The configuration file is written in [TOML](https://toml.io). To login to your E-Mail account, you need to provide the following information:
 
 ```toml
-[mail.login]
+[server]
 # The IMAP server to connect to (you can find this information in your E-Mail client)
 server = "my.mail.server"
 # The port to connect to
@@ -41,7 +41,7 @@ port = 993
 The configure which E-Mails to search for and fetch, you need to provide the following information:
 
 ```toml
-[mail.fetch]
+[server]
 # The mailboxes to fetch from the WRs you sent,
 # you can also run `cargo run mailboxes` to get a list of all mailboxes you have.
 wr_mailboxes = ["Sent", "Sent Messages"]
