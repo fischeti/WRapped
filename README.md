@@ -41,7 +41,7 @@ port = 993
 The configure which E-Mails to search for and fetch, you need to provide the following information:
 
 ```toml
-[server]
+[query]
 # The mailboxes to fetch from the WRs you sent,
 # you can also run `cargo run mailboxes` to get a list of all mailboxes you have.
 wr_mailboxes = ["Sent", "Sent Messages"]
