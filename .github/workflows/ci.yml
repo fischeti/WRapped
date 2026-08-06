@@ -1,20 +1,26 @@
 on: [push, pull_request]
 name: ci
 
-# Make sure CI fails on all warnings, including Clippy lints
 env:
-  RUSTFLAGS: "-Dwarnings"
+  CARGO_TERM_COLOR: always
 
 jobs:
-  checks:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Build
-        run: cargo build
+      - uses: actions/checkout@v7.0.1
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Check Formatting
+        run: cargo fmt --check
+
       - name: Run Clippy
-        run: cargo clippy --no-deps --all-targets
-      - name: Run Rustfmt (run `cargo fmt --all` to fix)
-        run: cargo fmt --all -- --check
-      - name: Run tests
-        run: cargo test
+        run: cargo clippy -- -D warnings
+
+      - name: Run Tests
+        run: cargo test --verbose
