@@ -29,7 +29,20 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
     ```bash
     cargo run
     ```
-    which should automatically open a browser window with the statistics.
+    which prints a summary to the terminal and automatically opens a browser window with the statistics.
+
+## Usage
+
+Without a subcommand, WRapped fetches your WRs and their replies, generates the statistics and shows them in your browser. The subcommands are there to debug your configuration:
+
+| Subcommand | Description |
+| --- | --- |
+| `mailboxes` | List all mailboxes of your account, to fill in the config file |
+| `fetch-inbox` | Fetch the first mail of the inbox, to check that the login works |
+| `fetch-wrs` | Fetch the WRs you sent and list them, without generating statistics |
+| `fetch-replies` | Fetch the replies to your WRs and list them, without generating statistics |
+
+The most useful options are `--config <FILE>` to use a config file other than `config.toml`, `--addr <ADDR>` to serve the web app somewhere other than `127.0.0.1:8080`, and `--no-open` to keep WRapped from opening a browser window. Colors are disabled automatically when the output is not a terminal or when `NO_COLOR` is set, and `--color always|never` overrides that. Run `cargo run -- --help` for the full list.
 
 ## Configuration
 
