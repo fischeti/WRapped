@@ -24,14 +24,24 @@ fn cli() -> Command {
 
 #[actix_web::main]
 async fn main() -> Result<()> {
-    env::set_var("RUST_LOG", "actix_server=warn,info");
+    if env::var("RUST_LOG").is_err() {
+        env::set_var("RUST_LOG", "actix_server=warn,info");
+    }
     pretty_env_logger::init();
 
-    let config_contents = fs::read_to_string("config.toml")
-        .map_err(|_| WrError::ConfigError("Could not read config file".to_string()))?;
+    // Parse the arguments before anything else, so that e.g. `--help`
+    // does not prompt for credentials first.
+    let matches = cli().get_matches();
+
+    let config_contents = fs::read_to_string("config.toml").map_err(|_| {
+        WrError::ConfigError(
+            "Could not read config file `config.toml`, copy `config.example.toml` to get started"
+                .to_string(),
+        )
+    })?;
 
     let mut mail_config: config::MailConfig = toml::from_str(&config_contents)
-        .map_err(|_| WrError::ConfigError("Could not parse config file".to_string()))?;
+        .map_err(|e| WrError::ConfigError(format!("Could not parse config file: {}", e)))?;
 
     let username = match mail_config.server.username {
         Some(username) => Some(username),
@@ -45,13 +55,11 @@ async fn main() -> Result<()> {
 
     let password = match mail_config.server.password {
         Some(password) => Some(password),
-        None => Some(rpassword::prompt_password("Password: ").unwrap()),
+        None => Some(rpassword::prompt_password("Password: ")?),
     };
 
     mail_config.server.username = username;
     mail_config.server.password = password;
-
-    let matches = cli().get_matches();
 
     match matches.subcommand() {
         Some(("mailboxes", _)) => mail::list_mailboxes(&mail_config),
