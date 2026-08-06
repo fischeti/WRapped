@@ -69,18 +69,21 @@ impl Stats {
         }
     }
 
-    pub fn write_to_file(&self, file_path: &str) -> Result<()> {
+    /// The statistics as the JSON the web app fetches.
+    pub fn to_json(&self) -> Result<String> {
+        serde_json::to_string_pretty(&self).map_err(|e| WrError::SerializationError(e.to_string()))
+    }
+
+    pub fn write_to_file(&self, path: &Path) -> Result<()> {
         // Create the directory path if it doesn't exist
-        let path = Path::new(file_path);
         if let Some(dir_path) = path.parent() {
-            fs::create_dir_all(dir_path)?;
+            if !dir_path.as_os_str().is_empty() {
+                fs::create_dir_all(dir_path)?;
+            }
         }
 
-        // Serialize and write to the file
-        let serialized = serde_json::to_string_pretty(&self)
-            .map_err(|e| WrError::SerializationError(e.to_string()))?;
         let mut file = File::create(path)?;
-        file.write_all(serialized.as_bytes())?;
+        file.write_all(self.to_json()?.as_bytes())?;
         Ok(())
     }
 

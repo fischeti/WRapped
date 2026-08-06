@@ -36,6 +36,10 @@ pub struct Cli {
     #[arg(long)]
     pub no_open: bool,
 
+    /// Also write the generated statistics to a file, to inspect them by hand
+    #[arg(long, value_name = "FILE")]
+    pub stats_file: Option<PathBuf>,
+
     #[command(subcommand)]
     pub command: Option<Command>,
 }
@@ -80,6 +84,10 @@ mod tests {
         assert_eq!(cli.year, None, "the year defaults to the current one");
         assert_eq!(cli.addr, "127.0.0.1:8080");
         assert!(!cli.no_open);
+        assert_eq!(
+            cli.stats_file, None,
+            "the statistics are kept in memory unless a file is asked for"
+        );
     }
 
     #[test]
@@ -109,11 +117,14 @@ mod tests {
             "--addr",
             "0.0.0.0:9000",
             "--no-open",
+            "--stats-file",
+            "stats.json",
         ]);
 
         assert_eq!(cli.config, Some(PathBuf::from("other.toml")));
         assert_eq!(cli.addr, "0.0.0.0:9000");
         assert!(cli.no_open);
+        assert_eq!(cli.stats_file, Some(PathBuf::from("stats.json")));
     }
 
     #[test]

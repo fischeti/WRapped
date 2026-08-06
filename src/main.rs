@@ -22,8 +22,6 @@ use config::{Config, Template};
 use error::{Result, WrError};
 use palette::label;
 
-const STATS_FILE: &str = "shared/stats.json";
-
 /// Ask a question, offering `default` for an empty answer.
 fn ask(question: &str, default: Option<&str>) -> Result<String> {
     loop {
@@ -185,14 +183,21 @@ async fn run() -> Result<()> {
             let merged_wrs = wr::merge_wrs(&wrs, &replies);
 
             let stats = stats::Stats::from_wrs(&merged_wrs, config.query.year);
-            stats.write_to_file(STATS_FILE)?;
             stats.print_summary();
+
+            // The web app is served the statistics out of memory, so that
+            // nothing but the binary itself is needed to run WRapped
+            if let Some(path) = cli.stats_file.as_deref() {
+                stats.write_to_file(path)?;
+                println!("   {} {}", "Wrote".bold(), path.display());
+                println!();
+            }
 
             let url = format!("http://{}/", cli.addr);
             if !cli.no_open {
                 server::open_browser(&url);
             }
-            server::run_server(&cli.addr).await?;
+            server::run_server(&cli.addr, stats.to_json()?).await?;
         }
     }
 

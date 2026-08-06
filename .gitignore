@@ -11,5 +11,7 @@ target/
 
 # The config.toml file is not tracked since it can contain sensitive data such as username, password
 config.toml
-shared/stats.json
+# Only written when `--stats-file` asks for it
+stats.json
+shared/
 .vscode/launch.json

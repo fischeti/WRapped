@@ -8,33 +8,36 @@
 
 ## Description
 
-This project is inspired by the yearly 'Spotify Wrapped', which is a summary of your listening habits over the past year. Wrapped does the same thing, but for Weekly reports a.k.a. WRs written by E-Mails. It is a simple script that parses your E-Mail inbox and outbox and generates statistics about your weekly reports. The statistic extraction is written in Rust, which creates a JSON file that is visualized using a web app.
+This project is inspired by the yearly 'Spotify Wrapped', which is a summary of your listening habits over the past year. Wrapped does the same thing, but for Weekly reports a.k.a. WRs written by E-Mails. It is a simple script that parses your E-Mail inbox and outbox and generates statistics about your weekly reports. The statistic extraction is written in Rust, and the statistics are visualized by a web app that is served straight out of the binary.
 
 ## Getting Started
 
 1. Install [Rust](https://rustup.rs), if you don't have already
 
-2. Clone this repository and navigate into it:
+2. Install WRapped:
     ```bash
-    git clone https://github.com/fischeti/WRapped.git
-    cd WRapped
+    cargo install --git https://github.com/fischeti/WRapped.git
     ```
+    This gives you a single self-contained `wrapped` binary that you can run from anywhere. There is nothing to clone and no directory to run it from — see [A single binary](#a-single-binary).
+
 3. Write a configuration file, which asks for your mail server and the addresses you sent the WRs between:
     ```bash
-    cargo run -- init
+    wrapped init
     ```
     This writes `~/.config/wrapped/config.toml`. See the [Configuration](#configuration) section for everything it does not ask about.
 
 4. Store your password in your keychain, so that you are not asked for it every time:
     ```bash
-    cargo run -- login
+    wrapped login
     ```
 
 5. Run the app to generate the statistics:
     ```bash
-    cargo run
+    wrapped
     ```
     which prints a summary to the terminal and automatically opens a browser window with the statistics.
+
+To work on WRapped instead, clone the repository and use `cargo run -- <args>` in place of `wrapped <args>`.
 
 ## Usage
 
@@ -50,7 +53,19 @@ Without a subcommand, WRapped fetches your WRs and their replies, generates the 
 | `fetch-wrs` | Fetch the WRs you sent and list them, without generating statistics |
 | `fetch-replies` | Fetch the replies to your WRs and list them, without generating statistics |
 
-The most useful options are `--year <YEAR>` to pick a year other than the current one, `--config <FILE>` to use a config file other than the discovered one, `--addr <ADDR>` to serve the web app somewhere other than `127.0.0.1:8080`, and `--no-open` to keep WRapped from opening a browser window. Run `cargo run -- --help` for the full list.
+The most useful options are `--year <YEAR>` to pick a year other than the current one, `--config <FILE>` to use a config file other than the discovered one, `--addr <ADDR>` to serve the web app somewhere other than `127.0.0.1:8080`, `--no-open` to keep WRapped from opening a browser window, and `--stats-file <FILE>` to also write the statistics out as JSON. Run `wrapped --help` for the full list.
+
+### A single binary
+
+The web app — the HTML, the stylesheet, the JavaScript and a pinned copy of [D3](https://d3js.org) — is compiled into the binary by [`rust-embed`](https://docs.rs/rust-embed), and the statistics are served out of memory rather than written to disk. So `wrapped` needs no files next to it, runs from any directory, and draws its charts without a network connection.
+
+Only release builds embed the files. A debug build (`cargo run`) reads `web/` from the checkout on every request instead, so that the app can be edited and reloaded in the browser without recompiling — which also means a debug binary only works from the checkout.
+
+The statistics are not written anywhere unless you ask for them with `--stats-file <FILE>`, which is handy for looking at the numbers the web app is drawing:
+
+```bash
+wrapped --stats-file stats.json --no-open
+```
 
 ### Where the config file is read from
 
@@ -123,7 +138,7 @@ SUBJECT "WR" OR SUBJECT "Weekly Report" FROM "theboss@my.mail.server" TO "my_use
 
 Each message contains a `IN-REPLY-TO` header, which contains the ID of the message it is replying to. The script then matches the replies to the WRs by comparing the `IN-REPLY-TO` header to the list of WRs.
 
-Lastly, the script generates the statistics and writes them to a JSON file. The web app then reads the JSON file and visualizes the statistics.
+Lastly, the script generates the statistics and serves them as JSON at `/stats/stats.json`, next to the web app itself. The web app then fetches that JSON and visualizes the statistics.
 
 ## License
 
