@@ -77,7 +77,6 @@ async fn run() -> Result<()> {
     // Parse the arguments before anything else, so that e.g. `--help`
     // does not prompt for credentials first.
     let cli = Cli::parse();
-    cli.color.apply();
 
     if env::var("RUST_LOG").is_err() {
         env::set_var("RUST_LOG", "actix_server=warn,info");

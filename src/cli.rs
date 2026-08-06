@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -26,10 +26,6 @@ pub struct Cli {
     #[arg(long)]
     pub no_open: bool,
 
-    /// When to color the output
-    #[arg(long, value_name = "WHEN", value_enum, default_value_t = ColorChoice::Auto)]
-    pub color: ColorChoice,
-
     #[command(subcommand)]
     pub command: Option<Command>,
 }
@@ -44,28 +40,6 @@ pub enum Command {
     FetchWrs,
     /// Fetch the replies to your WRs and list them, without generating statistics
     FetchReplies,
-}
-
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ColorChoice {
-    /// Color the output when it goes to a terminal
-    Auto,
-    /// Always color the output
-    Always,
-    /// Never color the output
-    Never,
-}
-
-impl ColorChoice {
-    /// Apply the choice to the whole process. `Auto` is left to `colored`,
-    /// which checks whether the output is a terminal and honors `NO_COLOR`.
-    pub fn apply(&self) {
-        match self {
-            ColorChoice::Auto => {}
-            ColorChoice::Always => colored::control::set_override(true),
-            ColorChoice::Never => colored::control::set_override(false),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -86,7 +60,6 @@ mod tests {
         assert_eq!(cli.config, PathBuf::from("config.toml"));
         assert_eq!(cli.addr, "127.0.0.1:8080");
         assert!(!cli.no_open);
-        assert_eq!(cli.color, ColorChoice::Auto);
     }
 
     #[test]
@@ -113,14 +86,11 @@ mod tests {
             "--addr",
             "0.0.0.0:9000",
             "--no-open",
-            "--color",
-            "never",
         ]);
 
         assert_eq!(cli.config, PathBuf::from("other.toml"));
         assert_eq!(cli.addr, "0.0.0.0:9000");
         assert!(cli.no_open);
-        assert_eq!(cli.color, ColorChoice::Never);
     }
 
     #[test]

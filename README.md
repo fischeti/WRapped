@@ -42,7 +42,9 @@ Without a subcommand, WRapped fetches your WRs and their replies, generates the 
 | `fetch-wrs` | Fetch the WRs you sent and list them, without generating statistics |
 | `fetch-replies` | Fetch the replies to your WRs and list them, without generating statistics |
 
-The most useful options are `--config <FILE>` to use a config file other than `config.toml`, `--addr <ADDR>` to serve the web app somewhere other than `127.0.0.1:8080`, and `--no-open` to keep WRapped from opening a browser window. Colors are disabled automatically when the output is not a terminal or when `NO_COLOR` is set, and `--color always|never` overrides that. Run `cargo run -- --help` for the full list.
+The most useful options are `--config <FILE>` to use a config file other than `config.toml`, `--addr <ADDR>` to serve the web app somewhere other than `127.0.0.1:8080`, and `--no-open` to keep WRapped from opening a browser window. Run `cargo run -- --help` for the full list.
+
+Colors are disabled automatically when the output is not a terminal, and when `NO_COLOR` is set.
 
 ## Configuration
 
