@@ -401,3 +401,99 @@ pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Mail>> {
     imap_session.logout()?;
     Ok(wr_replies)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn query(patterns: &[&str]) -> MailQuery {
+        MailQuery {
+            wr_mailboxes: vec!["Sent".to_string()],
+            re_mailboxes: vec!["INBOX".to_string()],
+            pattern: patterns.iter().map(|s| s.to_string()).collect(),
+            from: "me@example.com".to_string(),
+            to: "boss@example.com".to_string(),
+            year: 2023,
+        }
+    }
+
+    #[test]
+    fn builds_query_for_a_single_pattern() {
+        let query = build_imap_search_query(&query(&["WR"])).unwrap();
+
+        assert_eq!(
+            query,
+            "SUBJECT \"WR\" FROM \"me@example.com\" TO \"boss@example.com\" \
+             SINCE \"01-Jan-2023\" BEFORE \"01-Jan-2024\""
+        );
+    }
+
+    #[test]
+    fn builds_query_for_two_patterns() {
+        let query = build_imap_search_query(&query(&["WR", "Weekly Report"])).unwrap();
+
+        assert_eq!(
+            query,
+            "SUBJECT \"WR\" OR SUBJECT \"Weekly Report\" FROM \"me@example.com\" \
+             TO \"boss@example.com\" SINCE \"01-Jan-2023\" BEFORE \"01-Jan-2024\""
+        );
+    }
+
+    #[test]
+    fn rejects_no_pattern() {
+        assert!(build_imap_search_query(&query(&[])).is_err());
+    }
+
+    #[test]
+    fn rejects_more_than_two_patterns() {
+        assert!(build_imap_search_query(&query(&["WR", "Weekly Report", "Report"])).is_err());
+    }
+
+    #[test]
+    fn query_window_covers_the_whole_year() {
+        let mut fetch = query(&["WR"]);
+        fetch.year = 2019;
+        let query = build_imap_search_query(&fetch).unwrap();
+
+        // BEFORE is exclusive, so the window has to end on the 1st of January
+        // of the following year to include the last WR of December
+        assert!(query.contains("SINCE \"01-Jan-2019\""));
+        assert!(query.contains("BEFORE \"01-Jan-2020\""));
+    }
+
+    #[test]
+    fn extracts_plain_text_from_a_multipart_mail() {
+        let raw = concat!(
+            "Subject: WR\r\n",
+            "Content-Type: multipart/alternative; boundary=\"sep\"\r\n",
+            "\r\n",
+            "--sep\r\n",
+            "Content-Type: text/plain\r\n",
+            "\r\n",
+            "Did some work this week\r\n",
+            "--sep\r\n",
+            "Content-Type: text/html\r\n",
+            "\r\n",
+            "<p>Did some work this week</p>\r\n",
+            "--sep--\r\n",
+        );
+
+        let parsed = mailparse::parse_mail(raw.as_bytes()).unwrap();
+        let text = get_plain_text(&parsed).unwrap();
+
+        assert!(text.contains("Did some work this week"));
+        assert!(!text.contains("<p>"), "the HTML part must not be included");
+    }
+
+    #[test]
+    fn extracts_plain_text_from_a_simple_mail() {
+        let raw = "Subject: WR\r\nContent-Type: text/plain\r\n\r\nDid some work this week\r\n";
+
+        let parsed = mailparse::parse_mail(raw.as_bytes()).unwrap();
+
+        assert_eq!(
+            get_plain_text(&parsed).unwrap().trim(),
+            "Did some work this week"
+        );
+    }
+}
