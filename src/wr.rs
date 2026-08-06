@@ -42,9 +42,11 @@ impl WR {
         WR { sent, reply }
     }
 
+    /// How many days after the Friday of that week the WR was sent, so a WR
+    /// sent on Friday itself has a delay of 0 and one sent on Thursday of 6.
     pub fn wr_delay(&self) -> i64 {
         let weekday = self.sent.env.date.weekday();
-        let days_since_friday = (weekday.num_days_from_monday() + 2) % 7;
+        let days_since_friday = (weekday.num_days_from_monday() + 3) % 7;
         days_since_friday as i64
     }
 
@@ -108,19 +110,29 @@ impl WRs {
     }
 
     pub fn ratio_replied_wrs(&self) -> f64 {
-        let num_replied_wrs: usize = self.num_replied_wrs();
         let num_wrs = self.num_wrs();
-        num_replied_wrs as f64 / num_wrs as f64
+        if num_wrs == 0 {
+            return 0.0;
+        }
+        self.num_replied_wrs() as f64 / num_wrs as f64
     }
 
     pub fn avg_wr_delay(&self) -> f64 {
-        let num_replied_wrs = self.num_replied_wrs();
+        // The delay is defined for every WR, so average over all of them
+        let num_wrs = self.num_wrs();
+        if num_wrs == 0 {
+            return 0.0;
+        }
         let wr_delay_sum: i64 = self.wrs.iter().map(|wr| wr.wr_delay()).sum();
-        wr_delay_sum as f64 / num_replied_wrs as f64
+        wr_delay_sum as f64 / num_wrs as f64
     }
 
     pub fn avg_reply_delay(&self) -> f64 {
+        // Only WRs that got a reply have a reply delay
         let num_replied_wrs = self.num_replied_wrs();
+        if num_replied_wrs == 0 {
+            return 0.0;
+        }
         let reply_delay_sum: i64 = self.wrs.iter().filter_map(|wr| wr.reply_delay()).sum();
         reply_delay_sum as f64 / num_replied_wrs as f64
     }
@@ -144,14 +156,9 @@ impl WRs {
         for day in 0..7 {
             hist.insert(day, 0);
         }
-        for wr in self.wrs.iter() {
-            match wr.reply {
-                Some(_) => {
-                    let weekday = wr.sent.env.date.weekday();
-                    hist.entry(weekday as u32).and_modify(|e| *e += 1);
-                }
-                None => continue,
-            };
+        for reply in self.wrs.iter().filter_map(|wr| wr.reply.as_ref()) {
+            let weekday = reply.env.date.weekday();
+            hist.entry(weekday as u32).and_modify(|e| *e += 1);
         }
         hist
     }
@@ -175,14 +182,9 @@ impl WRs {
         for hour in 0..24 {
             hist.insert(hour, 0);
         }
-        for wr in self.wrs.iter() {
-            match wr.reply {
-                Some(_) => {
-                    let hour = wr.sent.env.date.hour();
-                    hist.entry(hour).and_modify(|e| *e += 1);
-                }
-                None => continue,
-            };
+        for reply in self.wrs.iter().filter_map(|wr| wr.reply.as_ref()) {
+            let hour = reply.env.date.hour();
+            hist.entry(hour).and_modify(|e| *e += 1);
         }
         hist
     }
