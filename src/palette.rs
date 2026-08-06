@@ -1,4 +1,8 @@
+use clap::builder::styling::{Color, RgbColor, Style, Styles};
 use colored::{ColoredString, Colorize};
+
+// The grey the web app uses for its labels
+const LABEL_GREY: (u8, u8, u8) = (0xa3, 0xa3, 0xa3);
 
 /// A color palette, mirroring the `palette-*` classes of the web app so that
 /// the terminal summary and the web page agree on the colors of a given year.
@@ -98,7 +102,32 @@ fn mix(a: (u8, u8, u8), b: (u8, u8, u8)) -> (u8, u8, u8) {
 
 /// Dimmed text, for labels and units.
 pub fn label(text: &str) -> ColoredString {
-    text.truecolor(0xa3, 0xa3, 0xa3)
+    paint(text, LABEL_GREY)
+}
+
+/// The color of an error message, matching how clap styles its own errors.
+pub fn error(text: &str) -> ColoredString {
+    paint(text, DEFAULT.color_2).bold()
+}
+
+/// The styles clap uses for the help output and its own error messages.
+///
+/// The year, and with it the palette of the run, is only known once the config
+/// file has been read, which happens after the arguments have been parsed, so
+/// the help output always uses the default palette.
+pub fn clap_styles() -> Styles {
+    Styles::styled()
+        .header(styled(DEFAULT.color_3).bold().underline())
+        .usage(styled(DEFAULT.color_3).bold().underline())
+        .literal(styled(DEFAULT.color_4).bold())
+        .placeholder(styled(LABEL_GREY))
+        .valid(styled(DEFAULT.color_4))
+        .invalid(styled(DEFAULT.color_2).bold())
+        .error(styled(DEFAULT.color_2).bold())
+}
+
+fn styled((r, g, b): (u8, u8, u8)) -> Style {
+    Style::new().fg_color(Some(Color::Rgb(RgbColor(r, g, b))))
 }
 
 #[cfg(test)]

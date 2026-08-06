@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
+use crate::palette;
+
 #[derive(Parser, Debug)]
 #[command(
     name = "WRapped",
@@ -11,7 +13,8 @@ use clap::{Parser, Subcommand};
                   Without a subcommand, WRapped fetches your WRs and their \
                   replies, generates the statistics and shows them in your \
                   browser. The subcommands are there to debug your \
-                  configuration."
+                  configuration.",
+    styles = palette::clap_styles()
 )]
 pub struct Cli {
     /// The configuration file to read the mail account and query from

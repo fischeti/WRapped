@@ -67,7 +67,7 @@ async fn main() -> ExitCode {
     if let Err(e) = run().await {
         // Report the error the way clap reports its own, instead of letting
         // the runtime print the `Debug` representation of it
-        eprintln!("{} {}", "error:".red().bold(), e);
+        eprintln!("{} {}", palette::error("error:"), e);
         return ExitCode::FAILURE;
     }
     ExitCode::SUCCESS
