@@ -399,6 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let timeofdayData;
   let numWrsWritten;
   let numWords;
+  let delayDays;
   let ccData;
 
   const numWrsWrittenContainer= document.getElementById(numWrsWrittenId);
@@ -458,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
         numWords = data.num_words;
         delayDays = data.avg_reply_delay;
         weekdayData = data.weekday_wr_histogram;
-        timeofdayData = data.hour_reply_histogram;
+        timeofdayData = data.hour_wr_histogram;
         ccData = data.cc_histogram;
         updateYear(year);
         updateNumWrsWritten(numWrsWritten);
@@ -478,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Error fetching data:', error);
         ratioTextOverlayContainer.textContent = 'Sth failed.';
         numWrsWrittenContainer.textContent = 'Sth failed.';
-        numWrsSkippedContainer.textContent = 'Sth failed.';
+        numWordsContainer.textContent = 'Sth failed.';
         delayOfReplyContainer.textContent = 'Sth failed.';
     });
 });
