@@ -1,29 +1,29 @@
-[server]
-# The IMAP server to connect to (you can find this information in your E-Mail client)
+[account]
+# The IMAP server to connect to (you can find this in your E-Mail client)
 server = "my.mail.server"
+# The username to log in with. WRapped asks for it if you leave it out.
+username = "my_username"
 # The port to connect to
-port = 993
+# port = 993
 
 [query]
-# The mailboxes to fetch from the WRs you sent,
-# you can also run `cargo run mailboxes` to get
-# a list of all mailboxes you have.
-wr_mailboxes = ["Sent"]
-# The mailboxes to fetch from the WR replies you received.
-# Usually you only need to fetch from the INBOX. However,
-# if you have a rule that moves the WR replies to a
-# different mailbox, you need to add it here.
-re_mailboxes = ["INBOX"]
-# The pattern to match the WR subject you sent.
-# This will match all subjects that contain the
-# strings "WR" OR "Weekly Report". This means that
-# your Subject needs to be consistent over the years.
-# Currently, you can only match at most two patterns
-# (this is a limitation of the IMAP search query).
-pattern = ["WR", "Weekly Report"]
-# From which mail address you sent the WRs
+# From which mail address you sent the WRs.
+# Defaults to `username` when that is an address itself.
 from = "my_username@my.mail.server"
 # To which mail address you sent the WRs
 to = "theboss@my.mail.server"
-# The year to fetch the WRs from
-year = 2023
+# The mailboxes to fetch the WRs you sent from,
+# run `wrapped mailboxes` to list the ones you have
+# wr_mailboxes = ["Sent"]
+# The mailboxes to fetch the replies to your WRs from.
+# Usually the INBOX is enough, but if a rule moves the
+# replies somewhere else, name that mailbox here.
+# re_mailboxes = ["INBOX"]
+# The patterns to match the subject of a WR against.
+# This matches every subject containing "WR" OR "Weekly Report",
+# so your subject has to be consistent over the years.
+# At most two, which is a limitation of the IMAP search query.
+# pattern = ["WR", "Weekly Report"]
+
+# The password does not belong here. Run `wrapped login` to store it in
+# your keychain, or pass it in the WRAPPED_PASSWORD environment variable.
