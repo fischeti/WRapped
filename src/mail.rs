@@ -137,32 +137,6 @@ pub fn list_mailboxes(config: &Config, credentials: &Credentials) -> Result<()> 
     Ok(())
 }
 
-pub fn fetch_inbox(config: &Config, credentials: &Credentials) -> Result<()> {
-    // Login to the IMAP server
-    let mut imap_session = imap_login(&config.account, credentials)?;
-
-    // Select the INBOX mailbox
-    imap_session.select("INBOX")?;
-
-    // Fetch the first message (only the ENVELOPE)
-    let messages = imap_session.fetch("1", "ENVELOPE")?;
-    let message = if let Some(message) = messages.iter().next() {
-        message
-    } else {
-        return Ok(());
-    };
-
-    // Print the subject of the message
-    let envelope = message.envelope().unwrap();
-    let subject = envelope.subject.as_ref().unwrap().as_ref();
-    let subject_str = std::str::from_utf8(subject).unwrap();
-    info!("Got Mail with Subject: {}", subject_str);
-
-    // Logout from the IMAP server
-    imap_session.logout()?;
-    Ok(())
-}
-
 fn build_imap_search_query(fetch: &Query) -> Result<String> {
     // Check that patterns is not empty
     if fetch.pattern.is_empty() {

@@ -49,9 +49,9 @@ Without a subcommand, WRapped fetches your WRs and their replies, generates the 
 | `login` | Store the password of your account in your keychain |
 | `logout` | Remove the password of your account from your keychain |
 | `mailboxes` | List all mailboxes of your account, to fill in the config file |
-| `fetch-inbox` | Fetch the first mail of the inbox, to check that the login works |
-| `fetch-wrs` | Fetch the WRs you sent and list them, without generating statistics |
-| `fetch-replies` | Fetch the replies to your WRs and list them, without generating statistics |
+| `check` | Log in and list what the query matches, without generating statistics |
+
+`wrapped check` is the one to reach for when a run comes back empty or looks wrong. It logs in, runs both queries, and lists the WRs and replies they match, so you can see whether the problem is the account or the query — a wrong `pattern`, `from`, `to`, `wr_mailboxes` or `--year` shows up as an empty list rather than as an error.
 
 The most useful options are `--year <YEAR>` to pick a year other than the current one, `--config <FILE>` to use a config file other than the discovered one, `--addr <ADDR>` to serve the web app somewhere other than `127.0.0.1:8080`, `--no-open` to keep WRapped from opening a browser window, and `--stats-file <FILE>` to also write the statistics out as JSON. Run `wrapped --help` for the full list.
 

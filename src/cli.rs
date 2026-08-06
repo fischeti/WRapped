@@ -54,12 +54,8 @@ pub enum Command {
     Logout,
     /// List all mailboxes of your account, to fill in the config file
     Mailboxes,
-    /// Fetch the first mail of the inbox, to check that the login works
-    FetchInbox,
-    /// Fetch the WRs you sent and list them, without generating statistics
-    FetchWrs,
-    /// Fetch the replies to your WRs and list them, without generating statistics
-    FetchReplies,
+    /// Log in and list what the query matches, without generating statistics
+    Check,
 }
 
 #[cfg(test)]
@@ -97,9 +93,7 @@ mod tests {
             ("login", Command::Login),
             ("logout", Command::Logout),
             ("mailboxes", Command::Mailboxes),
-            ("fetch-inbox", Command::FetchInbox),
-            ("fetch-wrs", Command::FetchWrs),
-            ("fetch-replies", Command::FetchReplies),
+            ("check", Command::Check),
         ];
 
         for (name, expected) in subcommands {

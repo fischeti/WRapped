@@ -120,6 +120,44 @@ fn list_mails(subject: &str, mails: &[mail::Mail]) {
     println!();
 }
 
+/// Log in and run both queries, reporting what they match. Almost every
+/// configuration mistake shows up here as an empty list rather than as an
+/// error, which is why the mails are listed and not just counted.
+fn check(config: &Config, credentials: &config::Credentials) -> Result<()> {
+    let palette = palette::Palette::for_year(config.query.year);
+
+    // Logging in on its own first, so that a wrong password is reported as
+    // one instead of as a failing query
+    mail::check_login(config, credentials)?;
+    println!();
+    println!(
+        "   {}  {}",
+        palette.highlight("✓"),
+        label(&format!(
+            "Logged in to {} as {}",
+            config.account.server, credentials.username
+        ))
+    );
+
+    let wrs = mail::fetch_wrs(config, credentials)?;
+    list_mails("WRs", &wrs);
+
+    let replies = mail::fetch_replies(config, credentials)?;
+    list_mails("Replies", &replies);
+
+    if wrs.is_empty() {
+        println!(
+            "   {}",
+            label(
+                "No WRs matched. Check `pattern`, `from`, `to` and `wr_mailboxes`, or pass --year"
+            )
+        );
+        println!();
+    }
+
+    Ok(())
+}
+
 #[actix_web::main]
 async fn main() -> ExitCode {
     if let Err(e) = run().await {
@@ -168,15 +206,7 @@ async fn run() -> Result<()> {
     match cli.command {
         Some(Command::Init) | Some(Command::Login) | Some(Command::Logout) => unreachable!(),
         Some(Command::Mailboxes) => mail::list_mailboxes(&config, &credentials)?,
-        Some(Command::FetchInbox) => mail::fetch_inbox(&config, &credentials)?,
-        Some(Command::FetchWrs) => {
-            let wrs = mail::fetch_wrs(&config, &credentials)?;
-            list_mails("WRs", &wrs);
-        }
-        Some(Command::FetchReplies) => {
-            let replies = mail::fetch_replies(&config, &credentials)?;
-            list_mails("Replies", &replies);
-        }
+        Some(Command::Check) => check(&config, &credentials)?,
         None => {
             let wrs = mail::fetch_wrs(&config, &credentials)?;
             let replies = mail::fetch_replies(&config, &credentials)?;
