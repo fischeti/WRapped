@@ -42,6 +42,8 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug, PartialEq, Eq)]
 pub enum Command {
+    /// Write a config file, asking for the account and the query
+    Init,
     /// Store the password of your account in your keychain
     Login,
     /// Remove the password of your account from your keychain
@@ -83,6 +85,7 @@ mod tests {
     #[test]
     fn parses_every_subcommand() {
         let subcommands = [
+            ("init", Command::Init),
             ("login", Command::Login),
             ("logout", Command::Logout),
             ("mailboxes", Command::Mailboxes),
@@ -116,12 +119,12 @@ mod tests {
     #[test]
     fn takes_the_config_after_a_subcommand_too() {
         for args in [
-            ["wrapped", "--config", "other.toml", "mailboxes"],
-            ["wrapped", "mailboxes", "--config", "other.toml"],
+            ["wrapped", "--config", "other.toml", "init"],
+            ["wrapped", "init", "--config", "other.toml"],
         ] {
             let cli = Cli::parse_from(args);
 
-            assert_eq!(cli.command, Some(Command::Mailboxes));
+            assert_eq!(cli.command, Some(Command::Init));
             assert_eq!(cli.config, Some(PathBuf::from("other.toml")), "{:?}", args);
         }
     }

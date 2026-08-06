@@ -211,6 +211,71 @@ fn config_home(xdg_config_home: Option<OsString>, home: Option<OsString>) -> Opt
         .map(|home| PathBuf::from(home).join(".config"))
 }
 
+/// The values `wrapped init` asks for. Everything else has a default and is
+/// written as a commented out line, to show that it can be changed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Template {
+    pub server: String,
+    pub username: String,
+    pub from: String,
+    pub to: String,
+}
+
+impl Template {
+    fn render(&self) -> String {
+        format!(
+            "\
+[account]
+# The IMAP server to connect to (you can find this in your E-Mail client)
+server = \"{server}\"
+# The username to log in with
+username = \"{username}\"
+# The port to connect to
+# port = {port}
+
+[query]
+# From which mail address you sent the WRs
+from = \"{from}\"
+# To which mail address you sent the WRs
+to = \"{to}\"
+# The mailboxes to fetch the WRs you sent from,
+# run `wrapped mailboxes` to list the ones you have
+# wr_mailboxes = [{wr_mailboxes}]
+# The mailboxes to fetch the replies to your WRs from
+# re_mailboxes = [{re_mailboxes}]
+# The patterns to match the subject of a WR against.
+# At most two, which is a limitation of the IMAP search query.
+# pattern = [{pattern}]
+",
+            server = self.server,
+            username = self.username,
+            from = self.from,
+            to = self.to,
+            port = DEFAULT_PORT,
+            wr_mailboxes = quoted(&DEFAULT_WR_MAILBOXES),
+            re_mailboxes = quoted(&DEFAULT_RE_MAILBOXES),
+            pattern = quoted(&DEFAULT_PATTERN),
+        )
+    }
+}
+
+fn quoted(values: &[&str]) -> String {
+    values
+        .iter()
+        .map(|value| format!("\"{}\"", value))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Write `template` to `path`, creating the directories leading to it.
+pub fn write(path: &Path, template: &Template) -> Result<()> {
+    if let Some(dir) = path.parent() {
+        fs::create_dir_all(dir)?;
+    }
+    fs::write(path, template.render())?;
+    Ok(())
+}
+
 /// A password that does not end up in a log line by accident.
 #[derive(Clone)]
 pub struct Password(String);
@@ -374,6 +439,26 @@ mod tests {
 
         assert!(error.contains("wrapped login"), "{}", error);
         assert!(error.contains("WRAPPED_PASSWORD"), "{}", error);
+    }
+
+    #[test]
+    fn writes_a_config_that_parses_back() {
+        let template = Template {
+            server: "mail.example.com".to_string(),
+            username: "me".to_string(),
+            from: "me@example.com".to_string(),
+            to: "boss@example.com".to_string(),
+        };
+
+        let config = Config::parse(&template.render(), 2025).unwrap();
+
+        assert_eq!(config.account.server, "mail.example.com");
+        assert_eq!(config.account.username, Some("me".to_string()));
+        assert_eq!(config.query.from, "me@example.com");
+        assert_eq!(config.query.to, "boss@example.com");
+        // Everything that is commented out has to fall back to the default
+        assert_eq!(config.account.port, DEFAULT_PORT);
+        assert_eq!(config.query.pattern, DEFAULT_PATTERN);
     }
 
     #[test]
