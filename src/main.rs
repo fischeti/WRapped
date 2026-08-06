@@ -10,12 +10,14 @@ pub mod cli;
 pub mod config;
 pub mod error;
 pub mod mail;
+pub mod palette;
 pub mod server;
 pub mod stats;
 pub mod wr;
 
 use cli::{Cli, Command};
 use error::{Result, WrError};
+use palette::label;
 
 const STATS_FILE: &str = "shared/stats.json";
 
@@ -49,7 +51,7 @@ fn load_config(path: &Path) -> Result<config::MailConfig> {
 /// generating the statistics.
 fn list_mails(subject: &str, mails: &[mail::Mail]) {
     println!();
-    println!("   {}", format!("{} ({})", subject, mails.len()).bold());
+    println!("   {}", label(&format!("{} ({})", subject, mails.len())));
     for mail in mails.iter() {
         println!(
             "   {}  {}",
@@ -102,6 +104,7 @@ async fn run() -> Result<()> {
 
             let stats = stats::Stats::from_wrs(&merged_wrs, mail_config.query.year);
             stats.write_to_file(STATS_FILE)?;
+            stats.print_summary();
 
             let url = format!("http://{}/", cli.addr);
             if !cli.no_open {
