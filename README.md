@@ -19,7 +19,11 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
     git clone https://github.com/fischeti/WRapped.git
     cd WRapped
     ```
-3. Modify the mail configuration `config.toml` as explained in the [Configuration](#configuration) section:
+3. Create your mail configuration from the example and modify it as explained in the [Configuration](#configuration) section:
+    ```bash
+    cp config.example.toml config.toml
+    ```
+    `config.toml` is not tracked by git, since it can contain your username and password.
 
 4. Run the app to generate the statistics:
     ```bash
