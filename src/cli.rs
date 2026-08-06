@@ -18,8 +18,15 @@ use crate::palette;
 )]
 pub struct Cli {
     /// The configuration file to read the mail account and query from
-    #[arg(short, long, value_name = "FILE", default_value = "config.toml")]
-    pub config: PathBuf,
+    /// [default: ./config.toml, else ~/.config/wrapped/config.toml]
+    // Global, so that it can be passed after a subcommand as well, which is
+    // how `wrapped init --config <FILE>` reads most naturally
+    #[arg(short, long, value_name = "FILE", global = true)]
+    pub config: Option<PathBuf>,
+
+    /// The year to fetch the WRs of
+    #[arg(short, long, value_name = "YEAR")]
+    pub year: Option<u32>,
 
     /// The address to serve the web app on
     #[arg(short, long, value_name = "ADDR", default_value = "127.0.0.1:8080")]
@@ -60,7 +67,11 @@ mod tests {
         let cli = Cli::parse_from(["wrapped"]);
 
         assert_eq!(cli.command, None);
-        assert_eq!(cli.config, PathBuf::from("config.toml"));
+        assert_eq!(
+            cli.config, None,
+            "the config file is discovered, not defaulted"
+        );
+        assert_eq!(cli.year, None, "the year defaults to the current one");
         assert_eq!(cli.addr, "127.0.0.1:8080");
         assert!(!cli.no_open);
     }
@@ -91,9 +102,29 @@ mod tests {
             "--no-open",
         ]);
 
-        assert_eq!(cli.config, PathBuf::from("other.toml"));
+        assert_eq!(cli.config, Some(PathBuf::from("other.toml")));
         assert_eq!(cli.addr, "0.0.0.0:9000");
         assert!(cli.no_open);
+    }
+
+    #[test]
+    fn takes_the_config_after_a_subcommand_too() {
+        for args in [
+            ["wrapped", "--config", "other.toml", "mailboxes"],
+            ["wrapped", "mailboxes", "--config", "other.toml"],
+        ] {
+            let cli = Cli::parse_from(args);
+
+            assert_eq!(cli.command, Some(Command::Mailboxes));
+            assert_eq!(cli.config, Some(PathBuf::from("other.toml")), "{:?}", args);
+        }
+    }
+
+    #[test]
+    fn parses_the_year() {
+        let cli = Cli::parse_from(["wrapped", "--year", "2019"]);
+
+        assert_eq!(cli.year, Some(2019));
     }
 
     #[test]

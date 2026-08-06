@@ -9,7 +9,7 @@ use log::debug;
 use log::{info, warn};
 use std::collections::HashMap;
 
-use crate::config::{MailConfig, MailLogin, MailQuery};
+use crate::config::{Account, Config, Credentials, Query};
 use crate::error::{Result, WrError};
 
 #[derive(Debug, Clone)]
@@ -99,24 +99,24 @@ pub struct Mail {
     pub body: Option<String>,
 }
 
-fn imap_login(login: &MailLogin) -> Result<imap::Session<Box<dyn ImapConnection>>> {
-    let domain = login.server.as_str();
-    let port = login.port;
-    let username = login.username.clone().unwrap();
-    let password = login.password.clone().unwrap();
-
+fn imap_login(
+    account: &Account,
+    credentials: &Credentials,
+) -> Result<imap::Session<Box<dyn ImapConnection>>> {
     // Connect to the IMAP server
-    let client = imap::ClientBuilder::new(domain, port).connect()?;
+    let client = imap::ClientBuilder::new(&account.server, account.port).connect()?;
 
     // Login to the IMAP server
-    let imap_session = client.login(username, password).map_err(|e| e.0)?;
+    let imap_session = client
+        .login(&credentials.username, credentials.password.expose())
+        .map_err(|e| e.0)?;
 
     Ok(imap_session)
 }
 
-pub fn list_mailboxes(config: &MailConfig) -> Result<()> {
+pub fn list_mailboxes(config: &Config, credentials: &Credentials) -> Result<()> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.server)?;
+    let mut imap_session = imap_login(&config.account, credentials)?;
 
     // List all mailboxes
     let mailboxes = imap_session.list(Some(""), Some("*"))?;
@@ -130,9 +130,9 @@ pub fn list_mailboxes(config: &MailConfig) -> Result<()> {
     Ok(())
 }
 
-pub fn fetch_inbox(config: &MailConfig) -> Result<()> {
+pub fn fetch_inbox(config: &Config, credentials: &Credentials) -> Result<()> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.server)?;
+    let mut imap_session = imap_login(&config.account, credentials)?;
 
     // Select the INBOX mailbox
     imap_session.select("INBOX")?;
@@ -156,7 +156,7 @@ pub fn fetch_inbox(config: &MailConfig) -> Result<()> {
     Ok(())
 }
 
-fn build_imap_search_query(fetch: &MailQuery) -> Result<String> {
+fn build_imap_search_query(fetch: &Query) -> Result<String> {
     // Check that patterns is not empty
     if fetch.pattern.is_empty() {
         return Err(WrError::QueryError("No pattern specified".to_string()));
@@ -254,9 +254,9 @@ fn parse_envelope(message: &imap::types::Fetch) -> Option<Envelope> {
     }
 }
 
-pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Mail>> {
+pub fn fetch_wrs(config: &Config, credentials: &Credentials) -> Result<Vec<Mail>> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.server)?;
+    let mut imap_session = imap_login(&config.account, credentials)?;
 
     // Search for messages that contain the pattern
     let query = build_imap_search_query(&config.query)?;
@@ -348,9 +348,9 @@ pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Mail>> {
     Ok(wrs)
 }
 
-pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Mail>> {
+pub fn fetch_replies(config: &Config, credentials: &Credentials) -> Result<Vec<Mail>> {
     // Login to the IMAP server
-    let mut imap_session = imap_login(&config.server)?;
+    let mut imap_session = imap_login(&config.account, credentials)?;
 
     let mut reply_fetch = config.query.clone();
     // Swap `from` and `to` in the fetch configuration
@@ -406,8 +406,8 @@ pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Mail>> {
 mod tests {
     use super::*;
 
-    fn query(patterns: &[&str]) -> MailQuery {
-        MailQuery {
+    fn query(patterns: &[&str]) -> Query {
+        Query {
             wr_mailboxes: vec!["Sent".to_string()],
             re_mailboxes: vec!["INBOX".to_string()],
             pattern: patterns.iter().map(|s| s.to_string()).collect(),
