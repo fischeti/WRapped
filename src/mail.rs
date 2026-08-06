@@ -7,7 +7,7 @@ use imap::ImapConnection;
 use itertools::join;
 use log::debug;
 use log::{info, warn};
-use std::str::from_utf8;
+use std::collections::HashMap;
 
 use crate::config::{MailConfig, MailLogin, MailQuery};
 use crate::error::{Result, WrError};
@@ -58,16 +58,23 @@ pub struct Envelope {
 }
 
 impl Envelope {
-    pub fn from_imap_envelope(envelope: &imap_proto::types::Envelope) -> Self {
-        Envelope {
-            date: {
-                let date_str = envelope
-                    .date
-                    .as_ref()
-                    .map(|s| String::from_utf8_lossy(s).to_string());
-                DateTime::parse_from_rfc2822(&date_str.unwrap()).unwrap()
-            },
-            subject: String::from_utf8_lossy(envelope.subject.as_ref().unwrap()).to_string(),
+    pub fn from_imap_envelope(envelope: &imap_proto::types::Envelope) -> Result<Self> {
+        let date_str = envelope
+            .date
+            .as_ref()
+            .map(|s| String::from_utf8_lossy(s).to_string())
+            .ok_or_else(|| WrError::MailParseError("Mail has no date".to_string()))?;
+        let date = DateTime::parse_from_rfc2822(&date_str).map_err(|e| {
+            WrError::MailParseError(format!("Could not parse date \"{}\": {}", date_str, e))
+        })?;
+
+        Ok(Envelope {
+            date,
+            subject: envelope
+                .subject
+                .as_ref()
+                .map(|s| String::from_utf8_lossy(s).to_string())
+                .unwrap_or_default(),
             cc: envelope.cc.as_ref().map(|cc| {
                 cc.iter()
                     .map(|addr| Address::from_imap_address(addr))
@@ -81,7 +88,7 @@ impl Envelope {
                 .message_id
                 .as_ref()
                 .map(|s| String::from_utf8_lossy(s).to_string()),
-        }
+        })
     }
 }
 
@@ -201,6 +208,52 @@ fn get_plain_text(mail: &mailparse::ParsedMail) -> Result<String> {
     Ok(body_str)
 }
 
+/// Search the currently selected `mailbox` and return the matches as an IMAP
+/// sequence set, or `None` if there were no matches at all. Fetching an empty
+/// sequence set is a protocol error, so callers have to skip the mailbox.
+fn search_sequence_set(
+    imap_session: &mut imap::Session<Box<dyn ImapConnection>>,
+    query: &str,
+    mailbox: &str,
+) -> Result<Option<String>> {
+    let mut sequence_set: Vec<_> = imap_session.search(query)?.into_iter().collect();
+    sequence_set.sort();
+
+    info!(
+        "Found {} potential matches in mailbox {}",
+        sequence_set.len(),
+        mailbox
+    );
+    if sequence_set.is_empty() {
+        return Ok(None);
+    }
+
+    Ok(Some(join(
+        sequence_set.into_iter().map(|s| s.to_string()),
+        ",",
+    )))
+}
+
+/// Parse the envelope of a fetched message, warning and returning `None` if the
+/// mail is malformed. A single unparseable mail should not abort the whole run.
+fn parse_envelope(message: &imap::types::Fetch) -> Option<Envelope> {
+    let envelope = match message.envelope() {
+        Some(envelope) => envelope,
+        None => {
+            warn!("Skipping message {} without envelope", message.message);
+            return None;
+        }
+    };
+
+    match Envelope::from_imap_envelope(envelope) {
+        Ok(env) => Some(env),
+        Err(e) => {
+            warn!("Skipping message {}: {}", message.message, e);
+            None
+        }
+    }
+}
+
 pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Mail>> {
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.server)?;
@@ -222,65 +275,74 @@ pub fn fetch_wrs(config: &MailConfig) -> Result<Vec<Mail>> {
         }
 
         // Search for messages that contain the pattern
-        let sequence_set = imap_session.search(query.as_str())?;
-        let mut sequence_set: Vec<_> = sequence_set.into_iter().collect();
-        sequence_set.sort();
-        let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
+        let Some(sequence_set) = search_sequence_set(&mut imap_session, &query, mailbox)? else {
+            continue;
+        };
 
         // Fetch the messages
-        info!("Fetching envelope of {} potential WRs", sequence_set.len());
         let messages = imap_session.fetch(sequence_set, "ENVELOPE")?;
         debug!("Got {} messages", messages.len());
 
-        // Print the subjects of the messages
-        for message in messages.iter() {
-            let envelope = message.envelope().unwrap();
-            let reply_pattern = ["Re:", "RE:", "Aw:", "AW:"];
+        // Collect the WRs of this mailbox on their own: sequence numbers are
+        // only meaningful for the mailbox that is currently selected.
+        let mut mailbox_wrs = Vec::new();
+        let reply_pattern = ["Re:", "RE:", "Aw:", "AW:"];
 
-            match envelope.in_reply_to {
-                None => {
-                    let env = Envelope::from_imap_envelope(envelope);
-                    debug!("Found WR with subject: {}", env.subject);
-                    wrs.push(Mail {
-                        id: message.message,
-                        env,
-                        body: None,
-                    });
-                }
-                Some(_) => {
-                    let subject = from_utf8(envelope.subject.as_ref().unwrap().as_ref())
-                        .expect("No subject in the envelope");
-                    if reply_pattern.iter().any(|&s| subject.contains(s)) {
-                        debug!("Skipping reply with subject: {}", subject);
-                        continue;
-                    }
-                    let env = Envelope::from_imap_envelope(envelope);
-                    wrs.push(Mail {
-                        id: message.message,
-                        env,
-                        body: None,
-                    });
-                }
+        for message in messages.iter() {
+            let Some(env) = parse_envelope(message) else {
+                continue;
             };
+
+            // A reply to one of our own WRs is not a WR itself
+            if env.in_reply_to.is_some() && reply_pattern.iter().any(|&s| env.subject.contains(s)) {
+                debug!("Skipping reply with subject: {}", env.subject);
+                continue;
+            }
+
+            debug!("Found WR with subject: {}", env.subject);
+            mailbox_wrs.push(Mail {
+                id: message.message,
+                env,
+                body: None,
+            });
         }
 
-        info!("Found {} WRs", wrs.len());
+        info!("Found {} WRs in mailbox {}", mailbox_wrs.len(), mailbox);
+        if mailbox_wrs.is_empty() {
+            continue;
+        }
 
-        // Construct a new sequence set of all the WRs
-        let sequence_set: Vec<u32> = wrs.iter().map(|m: &Mail| m.id).collect();
-        let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
-
-        // Fetch the bodies of the WRs
-        info!("Fetching bodies of {} WRs", wrs.len());
+        // Fetch the bodies of the WRs found in this mailbox
+        let sequence_set: String = join(mailbox_wrs.iter().map(|m| m.id.to_string()), ",");
+        info!("Fetching bodies of {} WRs", mailbox_wrs.len());
         let messages = imap_session.fetch(sequence_set, "BODY[]")?;
 
-        // Add the text of the body to the WRs
-        for (message, wr) in messages.iter().zip(wrs.iter_mut()) {
-            let body = message.body().unwrap();
-            let parsed_mail = mailparse::parse_mail(body)?;
-            wr.body = get_plain_text(&parsed_mail).ok(); // If an error occurs, just skip the body
+        // The server may return the messages in any order, so match them by id
+        // instead of relying on the order of the sequence set.
+        let bodies: HashMap<u32, &[u8]> = messages
+            .iter()
+            .filter_map(|message| message.body().map(|body| (message.message, body)))
+            .collect();
+
+        for wr in mailbox_wrs.iter_mut() {
+            let Some(body) = bodies.get(&wr.id) else {
+                warn!("Got no body for WR with subject: {}", wr.env.subject);
+                continue;
+            };
+            // If the body cannot be parsed, just skip it
+            match mailparse::parse_mail(body)
+                .map_err(WrError::from)
+                .and_then(|parsed_mail| get_plain_text(&parsed_mail))
+            {
+                Ok(text) => wr.body = Some(text),
+                Err(e) => warn!("Could not parse body of \"{}\": {}", wr.env.subject, e),
+            }
         }
+
+        wrs.append(&mut mailbox_wrs);
     }
+
+    info!("Found {} WRs in total", wrs.len());
 
     imap_session.logout()?;
     Ok(wrs)
@@ -311,30 +373,26 @@ pub fn fetch_replies(config: &MailConfig) -> Result<Vec<Mail>> {
         }
 
         // Search for messages that contain the pattern
-        let sequence_set = imap_session.search(query.as_str())?;
-        let mut sequence_set: Vec<_> = sequence_set.into_iter().collect();
-        sequence_set.sort();
-        let sequence_set: String = join(sequence_set.into_iter().map(|s| s.to_string()), ",");
+        let Some(sequence_set) = search_sequence_set(&mut imap_session, &query, mailbox)? else {
+            continue;
+        };
 
         // Fetch the messages
-        info!("Fetching {} potential Replies", sequence_set.len());
         let messages = imap_session.fetch(sequence_set, "ENVELOPE")?;
 
-        // Print the subjects of the messages
+        // Only mails that reply to something can be replies to a WR
         for message in messages.iter() {
-            let envelope = message.envelope().unwrap();
-
-            match envelope.in_reply_to {
-                Some(_) => {
-                    let env = Envelope::from_imap_envelope(envelope);
-                    wr_replies.push(Mail {
-                        id: message.message,
-                        env,
-                        body: None,
-                    });
-                }
-                None => continue,
+            let Some(env) = parse_envelope(message) else {
+                continue;
             };
+            if env.in_reply_to.is_none() {
+                continue;
+            }
+            wr_replies.push(Mail {
+                id: message.message,
+                env,
+                body: None,
+            });
         }
     }
 
