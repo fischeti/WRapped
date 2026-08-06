@@ -12,32 +12,54 @@ This project is inspired by the yearly 'Spotify Wrapped', which is a summary of 
 
 ## Getting Started
 
-1. Install [Rust](https://rustup.rs), if you don't have already
-
-2. Install WRapped:
+1. Install WRapped. On macOS and Linux:
     ```bash
-    cargo install --git https://github.com/fischeti/WRapped.git
+    curl --proto '=https' --tlsv1.2 -LsSf https://github.com/fischeti/WRapped/releases/latest/download/wrapped-installer.sh | sh
     ```
-    This gives you a single self-contained `wrapped` binary that you can run from anywhere. There is nothing to clone and no directory to run it from — see [A single binary](#a-single-binary).
+    On Windows, in PowerShell:
+    ```powershell
+    powershell -ExecutionPolicy Bypass -c "irm https://github.com/fischeti/WRapped/releases/latest/download/wrapped-installer.ps1 | iex"
+    ```
+    Either way you end up with a single self-contained `wrapped` binary that you can run from anywhere. There is nothing to clone and no directory to run it from — see [A single binary](#a-single-binary). Other ways to install it are under [Installation](#installation).
 
-3. Write a configuration file, which asks for your mail server and the addresses you sent the WRs between:
+2. Write a configuration file, which asks for your mail server and the addresses you sent the WRs between:
     ```bash
     wrapped init
     ```
     This writes `~/.config/wrapped/config.toml`. See the [Configuration](#configuration) section for everything it does not ask about.
 
-4. Store your password in your keychain, so that you are not asked for it every time:
+3. Store your password in your keychain, so that you are not asked for it every time:
     ```bash
     wrapped login
     ```
 
-5. Run the app to generate the statistics:
+4. Run the app to generate the statistics:
     ```bash
     wrapped
     ```
     which prints a summary to the terminal and automatically opens a browser window with the statistics.
 
-To work on WRapped instead, clone the repository and use `cargo run -- <args>` in place of `wrapped <args>`.
+## Installation
+
+The installers above put the latest release into your `CARGO_HOME` (usually `~/.cargo/bin`). Pre-built binaries are available for:
+
+| Platform | Targets |
+| --- | --- |
+| macOS | Apple Silicon and Intel |
+| Linux | x86-64 and ARM64, against glibc |
+| Windows | x86-64 |
+
+Every [release](https://github.com/fischeti/WRapped/releases) also has the plain archives and their checksums attached, if you would rather download one yourself than pipe a script into a shell. Replacing `latest` in the URLs above with a tag such as `v0.1.0` installs that version instead of the newest one. What changed between releases is in the [changelog](CHANGELOG.md).
+
+To build it yourself instead, which needs [Rust](https://rustup.rs):
+
+```bash
+cargo install --locked --git https://github.com/fischeti/WRapped.git
+```
+
+This builds whatever is on `main` rather than the latest release; `--locked` makes it use the dependency versions from `Cargo.lock`.
+
+And to work on WRapped, clone the repository and use `cargo run -- <args>` in place of `wrapped <args>`.
 
 ## Usage
 
