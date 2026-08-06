@@ -7,6 +7,7 @@ use colored::Colorize;
 
 pub mod cli;
 pub mod config;
+pub mod credentials;
 pub mod error;
 pub mod mail;
 pub mod palette;
@@ -15,28 +16,11 @@ pub mod stats;
 pub mod wr;
 
 use cli::{Cli, Command};
-use config::{Config, Credentials, Password};
+use config::Config;
 use error::Result;
 use palette::label;
 
 const STATS_FILE: &str = "shared/stats.json";
-
-/// Resolve the credentials to log in with. The config file no longer holds
-/// the password, so it is always asked for.
-fn credentials(config: &Config) -> Result<Credentials> {
-    let username = match &config.account.username {
-        Some(username) => username.clone(),
-        None => {
-            eprint!("{}", "Username: ".bold());
-            let mut username = String::new();
-            std::io::stdin().read_line(&mut username)?;
-            username.trim().to_string()
-        }
-    };
-
-    let password = Password::new(rpassword::prompt_password("Password: ".bold())?);
-    Ok(Credentials { username, password })
-}
 
 /// List the mails of `subject`, so that the query can be checked without
 /// generating the statistics.
@@ -79,9 +63,22 @@ async fn run() -> Result<()> {
         .year
         .unwrap_or_else(|| chrono::Local::now().year() as u32);
     let config = Config::load(&path, year)?;
-    let credentials = credentials(&config)?;
+
+    // Storing and removing a password does not need one to be resolved first
+    match cli.command {
+        Some(Command::Login) => {
+            return credentials::login(&config, |credentials| {
+                mail::check_login(&config, credentials)
+            })
+        }
+        Some(Command::Logout) => return credentials::logout(&config),
+        _ => {}
+    }
+
+    let credentials = credentials::resolve(&config)?;
 
     match cli.command {
+        Some(Command::Login) | Some(Command::Logout) => unreachable!(),
         Some(Command::Mailboxes) => mail::list_mailboxes(&config, &credentials)?,
         Some(Command::FetchInbox) => mail::fetch_inbox(&config, &credentials)?,
         Some(Command::FetchWrs) => {

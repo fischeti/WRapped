@@ -86,8 +86,22 @@ impl Config {
     }
 
     fn parse(contents: &str, year: u32) -> Result<Self> {
-        let file: ConfigFile = toml::from_str(contents)
-            .map_err(|e| WrError::ConfigError(format!("Could not parse config file: {}", e)))?;
+        let file: ConfigFile = toml::from_str(contents).map_err(|e| {
+            let message = e.to_string();
+            // The config file used to hold the password, so say where it went
+            // rather than only that the field is not known any more
+            if message.contains("unknown field `password`") {
+                WrError::ConfigError(format!(
+                    "The config file no longer holds the password. Remove the \
+                     line and run `wrapped login` to store it in your keychain, \
+                     or set {} instead.\n{}",
+                    crate::credentials::PASSWORD_ENV,
+                    message
+                ))
+            } else {
+                WrError::ConfigError(format!("Could not parse config file: {}", message))
+            }
+        })?;
 
         // Sending a WR to yourself is almost certainly a wrong `to`
         if Some(&file.query.to) == file.query.from.as_ref() {
@@ -358,7 +372,8 @@ mod tests {
 
         let error = Config::parse(contents, 2025).unwrap_err().to_string();
 
-        assert!(error.contains("password"), "{}", error);
+        assert!(error.contains("wrapped login"), "{}", error);
+        assert!(error.contains("WRAPPED_PASSWORD"), "{}", error);
     }
 
     #[test]

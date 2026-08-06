@@ -18,6 +18,8 @@ pub enum WrError {
     ServerError(String),
     // Mail parsing error
     MailParseError(String),
+    // Keychain error
+    KeyringError(String),
 }
 
 impl std::fmt::Display for WrError {
@@ -30,6 +32,7 @@ impl std::fmt::Display for WrError {
             WrError::SerializationError(e) => write!(f, "Serialization error: {}", e),
             WrError::ServerError(e) => write!(f, "Server error: {}", e),
             WrError::MailParseError(e) => write!(f, "Mail parse error: {}", e),
+            WrError::KeyringError(e) => write!(f, "Keychain error: {}", e),
         }
     }
 }

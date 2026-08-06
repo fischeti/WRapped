@@ -114,6 +114,13 @@ fn imap_login(
     Ok(imap_session)
 }
 
+/// Log in and out again, to check that the credentials work.
+pub fn check_login(config: &Config, credentials: &Credentials) -> Result<()> {
+    let mut imap_session = imap_login(&config.account, credentials)?;
+    imap_session.logout()?;
+    Ok(())
+}
+
 pub fn list_mailboxes(config: &Config, credentials: &Credentials) -> Result<()> {
     // Login to the IMAP server
     let mut imap_session = imap_login(&config.account, credentials)?;

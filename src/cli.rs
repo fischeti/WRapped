@@ -42,6 +42,10 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug, PartialEq, Eq)]
 pub enum Command {
+    /// Store the password of your account in your keychain
+    Login,
+    /// Remove the password of your account from your keychain
+    Logout,
     /// List all mailboxes of your account, to fill in the config file
     Mailboxes,
     /// Fetch the first mail of the inbox, to check that the login works
@@ -79,6 +83,8 @@ mod tests {
     #[test]
     fn parses_every_subcommand() {
         let subcommands = [
+            ("login", Command::Login),
+            ("logout", Command::Logout),
             ("mailboxes", Command::Mailboxes),
             ("fetch-inbox", Command::FetchInbox),
             ("fetch-wrs", Command::FetchWrs),
