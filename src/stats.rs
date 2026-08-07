@@ -76,10 +76,10 @@ impl Stats {
 
     pub fn write_to_file(&self, path: &Path) -> Result<()> {
         // Create the directory path if it doesn't exist
-        if let Some(dir_path) = path.parent() {
-            if !dir_path.as_os_str().is_empty() {
-                fs::create_dir_all(dir_path)?;
-            }
+        if let Some(dir_path) = path.parent()
+            && !dir_path.as_os_str().is_empty()
+        {
+            fs::create_dir_all(dir_path)?;
         }
 
         let mut file = File::create(path)?;

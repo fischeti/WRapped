@@ -9,13 +9,12 @@ pub fn merge_wrs(wrs: &[Mail], wrs_re: &[Mail]) -> WRs {
     for wr_mail in wrs.iter() {
         let mut wr = WR::new(wr_mail.clone(), None);
         for re_mail in wrs_re.iter() {
-            if let Some(message_id) = wr_mail.env.message_id.as_ref() {
-                if let Some(in_reply_to) = re_mail.env.in_reply_to.as_ref() {
-                    if message_id.eq(in_reply_to) {
-                        wr.reply = Some(re_mail.clone());
-                        break;
-                    }
-                }
+            if let Some(message_id) = wr_mail.env.message_id.as_ref()
+                && let Some(in_reply_to) = re_mail.env.in_reply_to.as_ref()
+                && message_id.eq(in_reply_to)
+            {
+                wr.reply = Some(re_mail.clone());
+                break;
             }
         }
         merged_wrs.wrs.push(wr);
