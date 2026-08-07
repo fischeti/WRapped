@@ -1,6 +1,5 @@
 extern crate chrono;
 extern crate imap;
-extern crate native_tls;
 
 use chrono::{DateTime, FixedOffset};
 use imap::ImapConnection;
