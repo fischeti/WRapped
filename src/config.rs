@@ -172,10 +172,10 @@ pub fn discover(explicit: Option<&Path>) -> Result<PathBuf> {
         return Ok(local);
     }
 
-    if let Some(path) = default_path() {
-        if path.is_file() {
-            return Ok(path);
-        }
+    if let Some(path) = default_path()
+        && path.is_file()
+    {
+        return Ok(path);
     }
 
     Err(WrError::ConfigError(format!(
@@ -202,10 +202,10 @@ fn default_path_display() -> String {
 /// `~/Library/Application Support` on macOS, which is not where a command line
 /// tool is looked for.
 fn config_home(xdg_config_home: Option<OsString>, home: Option<OsString>) -> Option<PathBuf> {
-    if let Some(dir) = xdg_config_home {
-        if !dir.is_empty() {
-            return Some(PathBuf::from(dir));
-        }
+    if let Some(dir) = xdg_config_home
+        && !dir.is_empty()
+    {
+        return Some(PathBuf::from(dir));
     }
     home.filter(|home| !home.is_empty())
         .map(|home| PathBuf::from(home).join(".config"))
