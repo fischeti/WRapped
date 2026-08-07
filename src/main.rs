@@ -57,7 +57,7 @@ fn init(explicit: Option<PathBuf>) -> Result<()> {
         None => {
             return Err(WrError::ConfigError(
                 "Could not tell where to write the config file, pass --config".to_string(),
-            ))
+            ));
         }
     };
 
@@ -174,10 +174,10 @@ async fn run() -> Result<()> {
     // does not prompt for credentials first.
     let cli = Cli::parse();
 
-    if env::var("RUST_LOG").is_err() {
-        env::set_var("RUST_LOG", "actix_server=warn,info");
-    }
-    pretty_env_logger::init();
+    let filters = env::var("RUST_LOG").unwrap_or_else(|_| "actix_server=warn,info".to_string());
+    pretty_env_logger::formatted_builder()
+        .parse_filters(&filters)
+        .init();
 
     // Writing a config file is the one thing that does not need one
     if cli.command == Some(Command::Init) {
@@ -195,7 +195,7 @@ async fn run() -> Result<()> {
         Some(Command::Login) => {
             return credentials::login(&config, |credentials| {
                 mail::check_login(&config, credentials)
-            })
+            });
         }
         Some(Command::Logout) => return credentials::logout(&config),
         _ => {}

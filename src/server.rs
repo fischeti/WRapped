@@ -2,7 +2,7 @@ use std::thread;
 use std::time::Duration;
 
 use actix_web::http::header::ContentType;
-use actix_web::{web, App, HttpResponse, HttpServer};
+use actix_web::{App, HttpResponse, HttpServer, web};
 use rust_embed::RustEmbed;
 
 use log::{error, info};

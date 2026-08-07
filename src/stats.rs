@@ -8,7 +8,7 @@ use serde::Serialize;
 use serde_json;
 
 use crate::error::{Result, WrError};
-use crate::palette::{label, Palette};
+use crate::palette::{Palette, label};
 use crate::wr::WRs;
 
 // The weekday histograms are keyed by `chrono::Weekday as u32`, which counts
@@ -190,7 +190,7 @@ fn thousands(number: usize) -> String {
 fn busiest_weekday(histogram: &HashMap<u32, u32>) -> Option<&'static str> {
     histogram
         .iter()
-        .filter(|(_, &count)| count > 0)
+        .filter(|&(_, &count)| count > 0)
         // Prefer the earlier weekday when two of them tie
         .max_by(|(a_day, a_count), (b_day, b_count)| a_count.cmp(b_count).then(b_day.cmp(a_day)))
         .and_then(|(&day, _)| WEEKDAYS.get(day as usize).copied())

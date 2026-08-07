@@ -146,7 +146,7 @@ pub fn logout(config: &Config) -> Result<()> {
             return Err(WrError::KeyringError(format!(
                 "Could not remove the password: {}",
                 e
-            )))
+            )));
         }
     }
     Ok(())

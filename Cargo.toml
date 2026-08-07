@@ -4,7 +4,7 @@ authors = ["Tim Fischer <fischeti@iis.ee.ethz.ch>"]
 repository = "https://github.com/fischeti/WRapped"
 description = "Wrapped but for Weekly Reports"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 actix-web = "4.4.1"

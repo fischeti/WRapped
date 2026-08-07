@@ -120,7 +120,7 @@ impl Config {
                     return Err(WrError::ConfigError(
                         "`from` is missing, set it to the address you sent the WRs from"
                             .to_string(),
-                    ))
+                    ));
                 }
             },
         };
